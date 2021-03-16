@@ -1,7 +1,7 @@
 'use strict'
 
 class Person {
-    constructor(firstName, lastName, middleName, namePrefix, NameSuffix, address = null, phones = []) {
+    constructor(firstName, lastName, middleName, namePrefix, nameSuffix, address = null, phones = []) {
         this.firstName = firstName
         this.lastName = lastName
         this.middleName = middleName
