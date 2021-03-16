@@ -2,11 +2,11 @@
 
 class Person {
     constructor(firstName, lastName, middleName, namePrefix, NameSuffix, address = null, phones = []) {
-        this.firstName = ''
-        this.lastName = ''
-        this.middleName = ''
-        this.prefix = ''
-        this.suffix = ''
+        this.firstName = firstName
+        this.lastName = lastName
+        this.middleName = middleName
+        this.prefix = namePrefix
+        this.suffix = nameSuffix
         this.address = address
         this.phones = phones
     }
