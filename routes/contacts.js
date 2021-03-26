@@ -11,8 +11,8 @@ const dbContacts = require('../db/contacts')
 //====================================================================================
 //  Get a random person
 //====================================================================================
-//router.get('/', utils.authenticateToken, async(req, res) => {
-router.get('/', async(req, res) => {  
+router.get('/', utils.authenticateToken, async(req, res) => {
+//router.get('/', async(req, res) => {  
 
     try {
         // Get the actor making the request
