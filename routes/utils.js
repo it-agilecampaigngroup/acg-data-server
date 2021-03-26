@@ -2,7 +2,7 @@
 
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const db = require('../db')
+const db = require('../db/db')
 
 //====================================================================================
 //    Authenticate a token
@@ -13,11 +13,12 @@ function authenticateToken(req, res, next) {
 
     if( token == null ) return res.sendStatus(401) // Token is invalid
 
-    // Verify it
+    // Verify the token
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if(err) return res.sendStatus(403) // Token is not valid
         next()
     })
+
 }
 
 //====================================================================================
@@ -37,12 +38,12 @@ async function decodeToken(req, next) {
     // Get the token
     const token = getRequestHeaderAccessToken(req)
 
-    if( token != undefined ) {
+    if( token !== undefined ) {
         try {
             // Decode it
             const decoded = await jwt.decode(token)
             if( !decoded ) {
-                throw new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, `provided token does not decode as JWT`);
+                throw new Error(`Provided token does not decode as JWT`);
             }
             return decoded
         }

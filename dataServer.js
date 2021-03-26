@@ -1,12 +1,23 @@
 const express = require('express')
+const bodyParser = require('body-parser');
 const app = express()
 require('dotenv').config()
 
-//app.use(cors());
+app.use(bodyParser.json())
+//app.use(bodyParser.urlencoded({ extended: true }))
+
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,PATCH,HEAD,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-type,Accept,X-Access-Token,X-Key,Authorization');
+    res.header('Access-Control-Allow-Origin', '*');
+    next()
+})
 
 //Import Routes
-const contactRoutes = require('./routes/contact');
-app.use('/api/contact', contactRoutes);
+const contactRoutes = require('./routes/contacts');
+app.use('/api/contacts', contactRoutes);
+
+//Campaign.initialize(process.env.VG_DATA_SERVER_CAMPAIGN_ID)
 
 //====================================================================================
 //    Start listening for requests
@@ -14,3 +25,4 @@ app.use('/api/contact', contactRoutes);
 app.listen(process.env.VG_DATA_SERVER_PORT)
 
 console.log(`Listening on port ${process.env.VG_DATA_SERVER_PORT}`)
+
