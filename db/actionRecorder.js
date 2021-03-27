@@ -55,6 +55,7 @@ module.exports = {
                 clientId: action.clientId,
                 campaignId: action.campaignId,
                 actor: {
+                    actorId: action.actor.actorId,
                     firstName: action.actor.firstName,
                     lastName: action.actor.lastName,
                     middleName: action.actor.middleName,

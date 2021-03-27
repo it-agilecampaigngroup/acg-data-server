@@ -8,12 +8,12 @@ const AppError = require('../modules/AppError')
 const ErrorRecorder = require('./errorRecorder')
 const ActionRecorder = require('./actionRecorder')
 const ContactAction = require('../modules/ContactAction')
-const campaign = require('../modules/Campaign')
+//const campaign = require('../modules/Campaign')
 const Contact = require('../modules/Contact')
 
 module.exports = {
     
-    async getBestContact(actor, campaign, contactReason, contactMethod) {
+    async getBestContact(actor, contactReason, contactMethod) {
         // Make sure the contact reason is valid
         if (contactReason === undefined ) {
             throw new Error("A contact reason must be specified")
@@ -44,7 +44,7 @@ module.exports = {
         // Things look good so let's try to grab a contact
         try {
             // Record a "Contact requested" action
-            let action = new ContactAction("Contact requested", campaign, actor, contactReason, contactMethod, "Contact requested", "")
+            let action = new ContactAction("Contact requested", actor, contactReason, contactMethod, "Contact requested", "")
             ActionRecorder.recordContactAction(action)
 
             // Get the best contact
@@ -54,7 +54,9 @@ module.exports = {
             // marking the contact as leased in our database to minimize
             // the possibility that some other campaign will grab the contact
             // before we finish marking the contact as leased.
-            action = new ContactAction("Contact leased", campaign, actor, contactReason, contactMethod, "Contact leased", {personId: contact.personId})
+            action = new ContactAction("Contact leased", actor
+                , contactReason, contactMethod, "Contact leased"
+                , {personId: contact.personId, firstName: contact.firstName, lastName: contact.lastName})
             ActionRecorder.recordContactAction(action)
 
             // Mark the contact as leased
@@ -107,7 +109,7 @@ module.exports = {
                 , row.persuasion_attempt_allowed_date
                 , row.turnout_request_allowed_date
                 , row.person_id
-                , row.contact_status_id
+                , row.is_virtual
                 )
             }
             return undefined
@@ -130,7 +132,7 @@ module.exports = {
        
         // Build the SQL
         var sql = ""
-        if( contact.contactStatusId === null ) {
+        if( contact.isVirtual ) {
             // The status record doesn't exist so we do an insert
             sql = "INSERT INTO base.contact_status (person_id, lease_time, last_contact_attempt_time, modified_by)\r\n"
             sql += `VALUES ( ${contact.personId}`
@@ -141,7 +143,7 @@ module.exports = {
             sql = "UPDATE base.contact_status\r\n"
             sql += `SET lease_time = NOW()\r\n`
             sql += `, last_contact_attempt_time = NOW()\r\n`
-            sql += `, modified_by = '${actor.username}'`
+            sql += `, modified_by = '${actor.username}'\r\n`
             sql += `WHERE person_id = ${contact.personId};`
         }
         
@@ -195,7 +197,6 @@ module.exports = {
 
 } // End of module.export
 
-
 //===========================================================================================================
 //
 // Private functions
@@ -209,7 +210,7 @@ function buildContactRequestSelect(contactReason, contactMethod) {
     select += ", donation_request_allowed_date\r\n"
     select += ", persuasion_attempt_allowed_date\r\n"
     select += ", turnout_request_allowed_date\r\n"
-    select += ", person_id, contact_status_id\r\n"
+    select += ", person_id, is_virtual\r\n"
     switch(contactReason.toLowerCase()) {
         case "donation request":
             switch(contactMethod.toLowerCase()) {

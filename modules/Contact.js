@@ -6,7 +6,8 @@ class Contact {
         firstName, lastName, middleName, namePrefix, nameSuffix, rating
         , phoneNumber, phoneType, doNotCallCount, lastDoNotCallDate, address
         , leastTime, lastContactAttemptTime, donationRequestAllowedDate
-        , persuasionAttemptAllowedDate, turnoutRequestAllowedDate, personId, contactStatusId
+        , persuasionAttemptAllowedDate, turnoutRequestAllowedDate, personId
+        , isVirtual, result = {}
     ) {
         this.firstName = firstName
         this.lastName = lastName
@@ -25,7 +26,11 @@ class Contact {
         this.persuasionAttemptAllowedDate = persuasionAttemptAllowedDate
         this.turnoutRequestAllowedDate = turnoutRequestAllowedDate
         this.personId = personId
-        this.contactStatusId = contactStatusId
+        this.contactId = personId
+        //this.contactStatusId = contactStatusId
+        this.isVirtual = isVirtual
+        this.result = result
+
     }
 }
 

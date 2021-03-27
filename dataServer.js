@@ -17,7 +17,8 @@ app.use((req, res, next) => {
 const contactRoutes = require('./routes/contacts');
 app.use('/api/contacts', contactRoutes);
 
-//Campaign.initialize(process.env.VG_DATA_SERVER_CAMPAIGN_ID)
+const contactResponseRoutes = require('./routes/contactResponses');
+app.use('/api/contactresponse', contactResponseRoutes);
 
 //====================================================================================
 //    Start listening for requests

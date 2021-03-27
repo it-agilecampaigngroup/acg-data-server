@@ -3,6 +3,7 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const db = require('../db/db')
+const campaign = require('../modules/Campaign')
 
 //====================================================================================
 //    Authenticate a token
@@ -50,6 +51,61 @@ async function decodeToken(req, next) {
         catch(err) {
             throw err
         }
+    }
+}
+
+//====================================================================================
+// Gets the actor associated with the username in the token
+//===================================================================================
+const getActor = (req) => {
+    return new Promise(async (resolve, reject) => {
+        // Decode the token
+        const decoded = await decodeToken(req)
+        if( decoded === undefined ) {
+            let e = new Error('Unable to decode token')
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/utils.js', 'getActor', 'Unable to decode token', e))
+            reject(e)
+        }
+
+        // Get the actor
+        try {
+            campaign.getActorByUsername(decoded.user.username, (actor) => {
+                resolve(actor)
+            })
+        } catch(e) {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/utils.js', 'getActor', 'Error getting actor by username', e))
+            reject(e)
+        }
+
+    })
+}
+
+//====================================================================================
+//
+// Checks if the actor associated with the username in the req.body is blocked
+//
+// Returns true if the actor is blocked, false if not.
+//
+//====================================================================================
+async function isActorBlocked(req) {
+    
+    // Decode the token
+    const decoded = await decodeToken(req)
+    if( decoded === undefined ) {
+        let e = new Error('Unable to decode token')
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /', 'Unable to decode token', e))
+        throw e
+    }
+
+    // Get the actor's status
+    try {
+        const isBlocked = await campaign.isActorBlocked(decoded.user.username)
+        //if( isBlocked ) { console.log('True') } else { console.log('False') }
+        //console.log(isBlocked)
+        return isBlocked
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contacts.js', 'GET /', 'Error checking if actor is blocked', e))
+        throw e
     }
 }
 
@@ -232,6 +288,8 @@ module.exports = {
     authenticateToken
     , getRequestHeaderAccessToken
     , decodeToken
+    , getActor
+    , isActorBlocked
 //    , authenticateSystemAdmin
 //    , authenticateClientAdmin
 }
