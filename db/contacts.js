@@ -1,15 +1,13 @@
 'use strict'
 
 const db = require('./db')
-const Person = require('../modules/Person')
-const Phone = require('../modules/Phone')
-const StreetAddress = require('../modules/StreetAddress')
 const AppError = require('../modules/AppError')
 const ErrorRecorder = require('./errorRecorder')
 const ActionRecorder = require('./actionRecorder')
 const ContactAction = require('../modules/ContactAction')
-//const campaign = require('../modules/Campaign')
 const Contact = require('../modules/Contact')
+const Phone = require('../modules/Phone')
+const Address = require('../modules/Address')
 
 module.exports = {
     
@@ -44,7 +42,8 @@ module.exports = {
         // Things look good so let's try to grab a contact
         try {
             // Record a "Contact requested" action
-            let action = new ContactAction("Contact requested", actor, contactReason, contactMethod, "Contact requested", "")
+            let action = new ContactAction("Contact requested", actor
+                , contactReason, contactMethod, "Contact requested", "")
             ActionRecorder.recordContactAction(action)
 
             // Get the best contact
@@ -66,7 +65,7 @@ module.exports = {
             return contact    
         
         } catch(e) {
-            // The error should already be recorded so we don't 
+            // Any error we get should already be recorded so we don't 
             // need to do anything here.
             console.log(e)
         }
@@ -98,16 +97,15 @@ module.exports = {
                 , row.prefix
                 , row.suffix
                 , row.rating
-                , row.phone_number
-                , row.phone_type
-                , row.do_not_call_count
-                , row.last_do_not_call_date
-                , new Object
-                , row.least_time
+                , translatePhones(row.phones)
+                , translateAddresses(row.addresses)
+                , row.lease_time
                 , row.last_contact_attempt_time
                 , row.donation_request_allowed_date
                 , row.persuasion_attempt_allowed_date
                 , row.turnout_request_allowed_date
+                , {}
+                , []
                 , row.person_id
                 , row.is_virtual
                 )
@@ -144,6 +142,7 @@ module.exports = {
             sql += `SET lease_time = NOW()\r\n`
             sql += `, last_contact_attempt_time = NOW()\r\n`
             sql += `, modified_by = '${actor.username}'\r\n`
+            sql += `, date_modified = NOW()\r\n`
             sql += `WHERE person_id = ${contact.personId};`
         }
         
@@ -158,44 +157,9 @@ module.exports = {
             ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'markContactAsLeased', 'Database error marking contact as leased', e))
             throw new Error(e.message)
         }
-    },
-
-    //====================================================================================
-    // Retrieve a random person from base.person
-    //
-    // Returns: A populated Person object 
-    // 
-    //===================================================================================
-    async getRandomPerson() {
-       
-        // Build the SQL SELECT stmt
-        let select = buildSelect() // Builds the complicate SELECT portion of the SQL
-        select += "WHERE p.person_id = " + Math.floor(Math.random() * 1000000) + ";"
-          
-        // For debugging
-        console.log(select)
-    
-        // Execute the query and return the client
-        try {
-            const dbres = await db.query(select)
-            if( dbres.rowCount == 1) {
-                const row = dbres.rows[0]
-                const address = new StreetAddress(row.street1, row.street2, row.city, row.state, row.postal_code, row.county)
-                const phones = [
-                    new Phone("419-555-5555", "Mobile", true),
-                    new Phone("419-444-5555", "Home", false),
-                    new Phone("419-333-5555", "Other", false)
-                ]
-                return new Person(row.first_name, row.last_name, row.middle_name, row.prefix, row.suffix, address, phones)
-            }
-            return undefined
-        } catch(e) {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'getRandomPerson', 'Database error retrieving random person', e))
-            throw new Error(e.message)
-        }
     }
 
-} // End of module.export
+   } // End of module.export
 
 //===========================================================================================================
 //
@@ -204,15 +168,14 @@ module.exports = {
 //===========================================================================================================
 function buildContactRequestSelect(contactReason, contactMethod) {
     let select = "SELECT first_name, last_name, middle_name, suffix, prefix\r\n"
-    select += ", rating, phone_number, phone_type\r\n"
-    select += ", do_not_call_count, last_do_not_call_date\r\n"
+    select += ", rating, phones, addresses\r\n"
     select += ", lease_time, last_contact_attempt_time\r\n"
     select += ", donation_request_allowed_date\r\n"
     select += ", persuasion_attempt_allowed_date\r\n"
     select += ", turnout_request_allowed_date\r\n"
     select += ", person_id, is_virtual\r\n"
-    switch(contactReason.toLowerCase()) {
-        case "donation request":
+    switch(contactReason.toUpperCase()) {
+        case "DONATION REQUEST":
             switch(contactMethod.toLowerCase()) {
                 case "phone call":
                     select += "FROM base.v_donation_phone_contact\r\n"
@@ -223,7 +186,7 @@ function buildContactRequestSelect(contactReason, contactMethod) {
                     break;
             }
             break;
-        case "persuasion":
+        case "PERSUASION":
             switch(contactMethod.toLowerCase()) {
                 case "phone call":
                     select += "FROM base.v_persuasion_phone_contact\r\n"
@@ -234,10 +197,10 @@ function buildContactRequestSelect(contactReason, contactMethod) {
                     break;
             }
             break;                
-        case "turnout":
+        case "TURNOUT":
             switch(contactMethod.toLowerCase()) {
                 case "phone call":
-                    select += "FROM base.v_persuasion_phone_contact\r\n"
+                    select += "FROM base.v_turnout_requst_phone_contact\r\n"
                     break;
                 case "canvass":
                     break;
@@ -253,24 +216,40 @@ function buildContactRequestSelect(contactReason, contactMethod) {
     return select;
 }
 
-function buildSelect() {
-
-    let select = "SELECT p.prefix, p.first_name, p.middle_name, p.last_name, p.suffix\r\n"
-    select += ", TRIM(CONCAT(addr.number, ' ', addr.street_name)) street1\r\n"
-    select += ", TRIM(CONCAT(addr.unit_type, ' ', addr.unit_number)) street2\r\n"
-    select += ", loc.common_name city, aa.common_name state, addr.postal_code, sa.common_name county\r\n"
-    select += ", (SELECT json_agg(person_phones)\r\n"
-    select += "    FROM ( SELECT pp.phone_number, pt.description phone_type, pp.is_primary\r\n"
-    select += "           FROM base.person_phone pp\r\n"
-    select += "           INNER JOIN base.phone_type pt ON pt.type_id = pp.phone_type_id\r\n"
-    select += "           WHERE pp.person_id = p.person_id ) person_phones) AS phones\r\n"
-    select += "FROM base.person p\r\n"
-    select += "LEFT OUTER JOIN base.person_address pa ON pa.person_id = p.person_id\r\n"
-    select += "LEFT OUTER JOIN base.address addr ON addr.address_id = pa.address_id\r\n" 
-    select += "LEFT OUTER JOIN base.admin_area aa ON aa.admin_area_id = addr.admin_area_id\r\n"
-    select += "LEFT OUTER JOIN base.subadmin_area sa ON sa.subadmin_area_id = addr.subadmin_area_id\r\n"
-    select += "LEFT OUTER JOIN base.locality loc ON loc.locality_id = addr.locality_id\r\n"
-    
-    return select
+function translatePhones( phones ) {
+    var phone_array = []
+    for( let idx = 0; idx < phones.length; idx++ ) {
+        let phone = phones[idx]
+        phone_array.push( new Phone(
+            phone.phone_number
+            , phone.phone_type
+            , phone.is_primary
+            , phone.do_not_call_count
+            , phone.lastDoNotCallDate
+            , phone.phone_id
+            )
+        )
+    }
+    return phone_array
 }
+
+function translateAddresses( addresses ) {
+    var address_array = []
+    for( let idx = 0; idx < addresses.length; idx++ ) {
+        let address = addresses[idx]
+        address_array.push( new Address(
+            address.street1
+            , address.street2
+            , address.city
+            , address.state
+            , address.zip
+            , address.address_type
+            , address.is_primary
+            , address.address_id
+            )
+        )
+    }
+    return address_array
+}
+
 

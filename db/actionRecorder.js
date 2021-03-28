@@ -25,12 +25,12 @@ module.exports = {
         insert += ", detail, modified_by, date_modified)\r\n"
         insert += "VALUES ("
         insert += `Now(), ${action.clientId}, ${action.campaignId}, ${action.actor.actorId}`
-        insert += `, (SELECT action_id FROM base.contact_action WHERE description ILIKE '${action.action}')`
-        insert += `, (SELECT reason_id FROM base.contact_reason WHERE description ILIKE '${action.reason}')`
-        insert += `, (SELECT method_id FROM base.contact_method WHERE description ILIKE '${action.method}')`
-        insert += `, (SELECT result_id FROM base.contact_result WHERE description ILIKE '${action.result}')`
+        insert += `, (SELECT action_id FROM base.contact_action WHERE description ILIKE '${action.contactAction}')`
+        insert += `, (SELECT reason_id FROM base.contact_reason WHERE description ILIKE '${action.contactReason}')`
+        insert += `, (SELECT method_id FROM base.contact_method WHERE description ILIKE '${action.contactMethod}')`
+        insert += `, (SELECT result_id FROM base.contact_result WHERE description ILIKE '${action.contactResult}')`
         if( action.detail != "" ) {
-            insert += `, '${JSON.stringify(action.detail)}'`
+            insert += `, '${db.formatTextForSQL(JSON.stringify(action.detail))}'`
         } else {
             insert += ", NULL"
         }
@@ -50,7 +50,7 @@ module.exports = {
         try {
             // Send a ContactActions message
             let msg = {
-                action: action.action,
+                contactAction: action.contactAction,
                 timestamp: action.timestamp,
                 clientId: action.clientId,
                 campaignId: action.campaignId,
@@ -62,8 +62,9 @@ module.exports = {
                     nameSuffix: action.actor.nameSuffix,
                     namePrefix: action.actor.namePrefix
                 },
-                reason: action.reason,
-                method: action.method,
+                contactReason: action.contactReason,
+                contactMethod: action.contactMethod,
+                contactResult: action.contactResult,
                 detail: action.detail
             }
             msging.sendContactActionsMsg(msg)

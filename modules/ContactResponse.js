@@ -1,15 +1,15 @@
 'use strict'
 
 class ContactResponse {
-    constructor(action, actor, contactId, reason, method, result, detail = {}) {
+    constructor(contactAction, actor, contactId, contactReason, contactMethod, contactResult, detail) {
         this.timestamp = Date()
-        this.action = action
+        this.contactAction = contactAction
         this.contactId = contactId
         this.clientId = actor.campaign.clientId
         this.campaignId = actor.campaign.campaignId
-        this.reason = reason
-        this.method = method
-        this.result = result
+        this.contactReason = contactReason
+        this.contactMethod = contactMethod
+        this.contactResult = contactResult
         this.detail = detail
         this.actor = actor
     }

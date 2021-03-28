@@ -16,6 +16,11 @@ const dbContacts = require('../db/contacts')
 //====================================================================================
 router.post('/', utils.authenticateToken, async(req, res) => {
     try {
+        
+        //===============================================================
+        // First, we process the contact response
+        //===============================================================
+        
         // Get the actor making the request
         var actor
         await utils.getActor(req)
@@ -29,7 +34,7 @@ router.post('/', utils.authenticateToken, async(req, res) => {
 
         // Translate the request into a ContactResponse object
         const response = new ContactResponse(
-            req.body.action
+            req.body.contactAction
             , actor
             , req.body.contactId
             , req.body.contactReason
@@ -37,15 +42,25 @@ router.post('/', utils.authenticateToken, async(req, res) => {
             , req.body.contactResult
             , req.body.detail
         )
+        
+        // Launch the process to process the response
+        try {
+            dbResponses.processContactResponse(response)
+        } catch(e) {
+            // All errors are recorded by processContactResponse so
+            // there's nothing to do here.
+        }
 
-        //await dbResponses.processContactResponse(response)
+        //===============================================================
+        // Return a new contact to the user
+        //===============================================================
 
         // Make sure user has not been blocked
         if( actor.isBlocked === true ) {
             return res.status(401).send("Forbidden: Actor has been blocked")
         }
 
-        // Return a contact
+        // Retrieve and return a contact
         try {
             let contact = await dbContacts.getBestContact(actor, req.body.contactReason, req.body.contactMethod)
             return res.status(200).send(contact)
