@@ -20,6 +20,9 @@ app.use('/api/contacts', contactRoutes);
 const contactResponseRoutes = require('./routes/contactResponses');
 app.use('/api/contactresponse', contactResponseRoutes);
 
+const reportRoutes = require('./routes/reports');
+app.use('/api/reports', reportRoutes);
+
 //====================================================================================
 //    Start listening for requests
 //====================================================================================
