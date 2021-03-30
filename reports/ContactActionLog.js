@@ -46,7 +46,7 @@ module.exports = async function generate(campaignId, actorId, dateStart, dateEnd
                 report.push(
                     {
                         date: new Date(row.date_created).toLocaleDateString(),
-                        time: new Date(row.date_created).toLocaleTimeString(),
+                        time: new Date(row.date_created).toTimeString(),
                         campaign: actor.campaign.name, 
                         actor: actor.displayName,
                         contactAction: row.contact_action,
