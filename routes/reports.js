@@ -47,7 +47,7 @@ router.post('/SendEmail', async(req, res) => {
     }
     }); 
 
-})
+});
 
 //====================================================================================
 // Support Result Summary Report
@@ -95,7 +95,7 @@ router.get('/SupportResultSummary', utils.authenticateToken, async(req, res) => 
 
         // Generate and return the report
         try {
-            const report = require('../reports/SupportResultsummary')
+            const report = require('../reports/SupportResultSummary')
             return res.status(200).send( await report(campaignId, targetActorId, dateStart, dateEnd) )
         } catch (e) {
             return res.status(400).send(`Error generating Support Result Summary report: ${e.message}`)
