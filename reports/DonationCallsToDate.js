@@ -22,13 +22,13 @@ module.exports = async function generate(campaignId, actorId, dateStart, dateEnd
                 , actorId: (actorId == 0) ? '' : actorId
                 , dateStart: dateStart
                 , dateEnd: dateEnd
-                , contactRequestCount: row.contact_request_count
-                , totalReponseCount: row.total_reponse_count
-                , positiveReponseCount: row.positive_reponse_count
-                , negativeReponseCount: row.negative_reponse_count
-                , failedAttemptCount: row.failed_attempt_count
-                , rejectedContactCount: row.rejected_contact_count
-                , totalDonationAmount: row.total_donation_amount
+                , contactRequestCount: parseInt(row.contact_request_count)
+                , totalReponseCount: parseInt(row.total_reponse_count)
+                , positiveReponseCount: parseInt(row.positive_reponse_count)
+                , negativeReponseCount: parseInt(row.negative_reponse_count)
+                , failedAttemptCount: parseInt(row.failed_attempt_count)
+                , rejectedContactCount: parseInt(row.rejected_contact_count)
+                , totalDonationAmount: parseFloat(row.total_donation_amount)
             }
         }
         return undefined
