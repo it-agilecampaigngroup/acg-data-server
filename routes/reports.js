@@ -23,7 +23,7 @@ router.get('/SupportResultSummary', utils.authenticateToken, async(req, res) => 
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /SupportResultSummary', 'Unknown error in GET /', e))
             throw e
         })
 
@@ -79,7 +79,7 @@ router.get('/DonationCallsToDate', utils.authenticateToken, async(req, res) => {
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /DonationCallsToDate', 'Unknown error in GET /', e))
             throw e
         })
 
@@ -135,7 +135,7 @@ router.get('/ContactActionLog', utils.authenticateToken, async(req, res) => {
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /ContactActionLog', 'Unknown error in GET /', e))
             throw e
         })
 
@@ -171,6 +171,48 @@ router.get('/ContactActionLog', utils.authenticateToken, async(req, res) => {
 
     } catch(e) {
         ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /ContactActionLog', 'Unknown error in GET /ContactActionLog', e))
+        throw e
+    }
+});
+
+//====================================================================================
+// Contact Action Log report
+//
+// Returns the Contact Action Logs for and actor or a campaign
+// 
+//====================================================================================
+router.get('/PersonContactHistory', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /PersonContactHistory', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Prepare the arguments
+        var personId = parseInt(req.query.personId)
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/PersonContactHistory')
+            return res.status(200).send( await report(personId) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Person Contact History report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /PersonContactHistory', 'Unknown error in GET /PersonContactHistory', e))
         throw e
     }
 });

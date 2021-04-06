@@ -30,22 +30,6 @@ router.post('/SendEmail', utils.authenticateToken, async(req, res) => {
             }
         });
 
-        // var username = 'it@agilecampaigngroup.com'
-        // var password = 'MF9[45KR_Njq'
-        // var transporter = nodemailer.createTransport({
-        //     host: 'mail.agilecampaigngroup.com' // Bluehost server
-        //     , name: 'mail.agilecampaigngroup.com' // Bluehost server
-        //     , port: 465     // secure SMTP
-        //     , secure: true // false for TLS
-        //     , auth: {
-        //         user: username,
-        //         pass: password
-        //     }
-        //     , tls: {
-        //         rejectUnauthorized: false
-        //     }
-        // });
-
         transporter.verify((err, success) => {
             if (err) {
               console.log(err);
