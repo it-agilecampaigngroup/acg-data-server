@@ -5,6 +5,22 @@ const router = express.Router()
 const utils = require('./utils') // Provides authenticateToken and authenticateAdmin
 const AppError = require('../modules/AppError')
 const ErrorRecorder = require('../db/errorRecorder')
+const campaign = require('../modules/Campaign')
+
+const getActor = (actorId) => {
+    return new Promise(async (resolve, reject) => {
+        // Get the actor
+        try {
+            campaign.getActor(actorId, (actor) => {
+                resolve(actor)
+            })
+        } catch(e) {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'getActor', 'Error getting actor by Id', e))
+            reject(e)
+        }
+
+    })
+}
 
 //====================================================================================
 // Support Result Summary Report
@@ -34,7 +50,7 @@ router.get('/SupportResultSummary', utils.authenticateToken, async(req, res) => 
 
         // The requesting actor must be a Campaign Manager if the report
         // is not for a specific actor or it's for some other actor
-        var targetActorId = (req.query.actorId === undefined ) ? 0 : parseInt(req.query.actorId)
+        var targetActorId = (req.query.actorId === undefined ) ? actor.actorId : parseInt(req.query.actorId)
         if( actor.isCampaignMgr === false ) {
             if( targetActorId !== actor.actorId ) {
                return res.status(401).send("Forbidden: You must be a Campaign Manager to run this report for the campaign or another actor")
@@ -42,8 +58,9 @@ router.get('/SupportResultSummary', utils.authenticateToken, async(req, res) => 
         }
 
         // Prepare the arguments
+        const targetActor = await getActor(targetActorId)
         var campaignId = parseInt(req.query.campaignId)
-        campaignId = (isNaN(campaignId)) ? actor.campaignId : campaignId
+        campaignId = (isNaN(campaignId)) ? targetActor.campaignId : campaignId
         var dateStart = (req.query.dateStart === undefined) ? new Date("1/1/2021") : req.query.dateStart
         dateStart = new Date(dateStart).toLocaleDateString()
         var dateEnd = (req.query.dateEnd === undefined) ? new Date() : req.query.dateEnd
@@ -93,7 +110,7 @@ router.get('/SupportByRace', utils.authenticateToken, async(req, res) => {
         // Generate and return the report
         try {
             const report = require('../reports/SupportByRace')
-            return res.status(200).send( await report() )
+            return res.status(200).send( await report(actor.campaignId) )
         } catch (e) {
             return res.status(400).send(`Error generating Support by Race report: ${e.message}`)
         }
@@ -134,7 +151,7 @@ router.get('/SupportByIncome', utils.authenticateToken, async(req, res) => {
         // Generate and return the report
         try {
             const report = require('../reports/SupportByIncome')
-            return res.status(200).send( await report() )
+            return res.status(200).send( await report(actor.campaignId) )
         } catch (e) {
             return res.status(400).send(`Error generating Support by Income report: ${e.message}`)
         }
@@ -175,7 +192,7 @@ router.get('/SupportByEducation', utils.authenticateToken, async(req, res) => {
         // Generate and return the report
         try {
             const report = require('../reports/SupportByEducation')
-            return res.status(200).send( await report() )
+            return res.status(200).send( await report(actor.campaignId) )
         } catch (e) {
             return res.status(400).send(`Error generating Support by Education report: ${e.message}`)
         }
@@ -213,7 +230,7 @@ router.get('/DonationCallsToDate', utils.authenticateToken, async(req, res) => {
 
         // The requesting actor must be a Campaign Manager if the report
         // is not for a specific actor or it's for some other actor
-        var targetActorId = (req.query.actorId === undefined ) ? 0 : parseInt(req.query.actorId)
+        var targetActorId = (req.query.actorId === undefined ) ? actor.actorId : parseInt(req.query.actorId)
         if( actor.isCampaignMgr === false ) {
             if( targetActorId !== actor.actorId ) {
                return res.status(401).send("Forbidden: You must be a Campaign Manager to run this report for the campaign or another actor")
@@ -221,8 +238,9 @@ router.get('/DonationCallsToDate', utils.authenticateToken, async(req, res) => {
         }
 
         // Prepare the arguments
+        const targetActor = await getActor(targetActorId)
         var campaignId = parseInt(req.query.campaignId)
-        campaignId = (isNaN(campaignId)) ? actor.campaignId : campaignId
+        campaignId = (isNaN(campaignId)) ? targetActor.campaignId : campaignId
         var dateStart = (req.query.dateStart === undefined) ? new Date("1/1/2021") : req.query.dateStart
         dateStart = new Date(dateStart).toLocaleDateString()
         var dateEnd = (req.query.dateEnd === undefined) ? new Date() : req.query.dateEnd
@@ -261,7 +279,7 @@ router.get('/ContactActionLog', utils.authenticateToken, async(req, res) => {
             ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /ContactActionLog', 'Unknown error in GET /', e))
             throw e
         })
-
+        
         // Make sure user has not been blocked
         if( actor.isBlocked === true ) {
             return res.status(401).send("Forbidden: Actor has been blocked")
@@ -269,16 +287,18 @@ router.get('/ContactActionLog', utils.authenticateToken, async(req, res) => {
 
         // The requesting actor must be a Campaign Manager if the report
         // is not for a specific actor or it's for some other actor
-        var targetActorId = (req.query.actorId === undefined ) ? 0 : parseInt(req.query.actorId)
+        var targetActorId = (req.query.actorId === undefined ) ? actor.actorId : parseInt(req.query.actorId)
         if( actor.isCampaignMgr === false ) {
             if( targetActorId !== actor.actorId ) {
                return res.status(401).send("Forbidden: You must be a Campaign Manager to run this report for the campaign or another actor")
             }
         }
-
+        
         // Prepare the arguments
+        const targetActor = await getActor(targetActorId)
         var campaignId = parseInt(req.query.campaignId)
-        campaignId = (isNaN(campaignId)) ? actor.campaignId : campaignId
+        campaignId = (isNaN(campaignId)) ? targetActor.campaignId : campaignId
+
         var dateStart = (req.query.dateStart === undefined) ? new Date("1/1/2021") : req.query.dateStart
         dateStart = new Date(dateStart).toLocaleDateString()
         var dateEnd = (req.query.dateEnd === undefined) ? new Date() : req.query.dateEnd

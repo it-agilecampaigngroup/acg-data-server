@@ -4,10 +4,10 @@ const db = require('../db/db')
 const AppError = require('../modules/AppError')
 const ErrorRecorder = require('../db/errorRecorder')
 
-module.exports = async function generate() {
+module.exports = async function generate(campaignId) {
 
     // Build the SQL
-    var sql = buildSQL()
+    var sql = buildSQL(campaignId)
     
     // For debugging
     //console.log(sql)
@@ -51,7 +51,7 @@ module.exports = async function generate() {
     }
 }
 
-function buildSQL() {
+function buildSQL(campaignId) {
 
     var sql = `    SELECT SUM(supportive) total_supportive_count, SUM(neutral) total_neutral_count, SUM(opposed) total_opposed_count\r\n`
     sql += `    , ROUND(100 * SUM(supportive) / SUM(supportive + neutral + opposed)) total_supportive_perc\r\n`
@@ -144,6 +144,7 @@ function buildSQL() {
     sql += `                    INNER JOIN base.contact_action ca ON ca.action_id = cal.contact_action_id\r\n`
     sql += `                    WHERE cal.detail ->> 'personId' <> '{}'\r\n`
     sql += `                    AND ca.description ILIKE 'Contact responded'\r\n`
+    sql += `			        AND cal.campaign_id = ${campaignId}\r\n`
     sql += `            ) act\r\n`
     sql += `    INNER JOIN base.person_address pa ON pa.person_id = act.person_id AND pa.is_primary = true\r\n`
     sql += `    INNER JOIN base.address addr ON addr.address_id = pa.address_id\r\n`

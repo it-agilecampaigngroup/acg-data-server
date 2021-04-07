@@ -35,8 +35,8 @@ router.post('/', utils.authenticateToken, async(req, res) => {
         // Translate the request into a ContactResponse object
         const response = new ContactResponse(
             req.body.contactAction
+            , req.body.campaignId
             , actor
-            , req.body.contactId
             , req.body.contactReason
             , req.body.contactMethod
             , req.body.contactResult
