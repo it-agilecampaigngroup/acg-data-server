@@ -50,7 +50,7 @@ router.get('/SupportResultSummary', utils.authenticateToken, async(req, res) => 
 
         // The requesting actor must be a Campaign Manager if the report
         // is not for a specific actor or it's for some other actor
-        var targetActorId = (req.query.actorId === undefined ) ? actor.actorId : parseInt(req.query.actorId)
+        var targetActorId = (req.query.actorId === undefined ) ? 0 : parseInt(req.query.actorId)
         if( actor.isCampaignMgr === false ) {
             if( targetActorId !== actor.actorId ) {
                return res.status(401).send("Forbidden: You must be a Campaign Manager to run this report for the campaign or another actor")
@@ -58,9 +58,15 @@ router.get('/SupportResultSummary', utils.authenticateToken, async(req, res) => 
         }
 
         // Prepare the arguments
-        const targetActor = await getActor(targetActorId)
         var campaignId = parseInt(req.query.campaignId)
-        campaignId = (isNaN(campaignId)) ? targetActor.campaignId : campaignId
+        if( isNaN(campaignId) ) {
+            if( targetActorId != 0) {
+                var targetActor = await getActor(targetActorId)
+                campaignId = targetActor.campaignId
+            } else {
+                campaignId = actor.campaignId
+            }
+        }
         var dateStart = (req.query.dateStart === undefined) ? new Date("1/1/2021") : req.query.dateStart
         dateStart = new Date(dateStart).toLocaleDateString()
         var dateEnd = (req.query.dateEnd === undefined) ? new Date() : req.query.dateEnd
@@ -230,7 +236,7 @@ router.get('/DonationCallsToDate', utils.authenticateToken, async(req, res) => {
 
         // The requesting actor must be a Campaign Manager if the report
         // is not for a specific actor or it's for some other actor
-        var targetActorId = (req.query.actorId === undefined ) ? actor.actorId : parseInt(req.query.actorId)
+        var targetActorId = (req.query.actorId === undefined ) ? 0 : parseInt(req.query.actorId)
         if( actor.isCampaignMgr === false ) {
             if( targetActorId !== actor.actorId ) {
                return res.status(401).send("Forbidden: You must be a Campaign Manager to run this report for the campaign or another actor")
@@ -238,9 +244,15 @@ router.get('/DonationCallsToDate', utils.authenticateToken, async(req, res) => {
         }
 
         // Prepare the arguments
-        const targetActor = await getActor(targetActorId)
         var campaignId = parseInt(req.query.campaignId)
-        campaignId = (isNaN(campaignId)) ? targetActor.campaignId : campaignId
+        if( isNaN(campaignId) ) {
+            if( targetActorId != 0) {
+                var targetActor = await getActor(targetActorId)
+                campaignId = targetActor.campaignId
+            } else {
+                campaignId = actor.campaignId
+            }
+        }
         var dateStart = (req.query.dateStart === undefined) ? new Date("1/1/2021") : req.query.dateStart
         dateStart = new Date(dateStart).toLocaleDateString()
         var dateEnd = (req.query.dateEnd === undefined) ? new Date() : req.query.dateEnd
@@ -287,18 +299,24 @@ router.get('/ContactActionLog', utils.authenticateToken, async(req, res) => {
 
         // The requesting actor must be a Campaign Manager if the report
         // is not for a specific actor or it's for some other actor
-        var targetActorId = (req.query.actorId === undefined ) ? actor.actorId : parseInt(req.query.actorId)
+        var targetActorId = (req.query.actorId === undefined ) ? 0 : parseInt(req.query.actorId)
         if( actor.isCampaignMgr === false ) {
+            console.log('Not Mgr')
             if( targetActorId !== actor.actorId ) {
                return res.status(401).send("Forbidden: You must be a Campaign Manager to run this report for the campaign or another actor")
             }
         }
-        
-        // Prepare the arguments
-        const targetActor = await getActor(targetActorId)
-        var campaignId = parseInt(req.query.campaignId)
-        campaignId = (isNaN(campaignId)) ? targetActor.campaignId : campaignId
 
+        // Prepare the arguments
+        var campaignId = parseInt(req.query.campaignId)
+        if( isNaN(campaignId) ) {
+            if( targetActorId != 0) {
+                var targetActor = await getActor(targetActorId)
+                campaignId = targetActor.campaignId
+            } else {
+                campaignId = actor.campaignId
+            }
+        }
         var dateStart = (req.query.dateStart === undefined) ? new Date("1/1/2021") : req.query.dateStart
         dateStart = new Date(dateStart).toLocaleDateString()
         var dateEnd = (req.query.dateEnd === undefined) ? new Date() : req.query.dateEnd
