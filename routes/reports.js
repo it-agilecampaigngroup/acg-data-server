@@ -64,6 +64,129 @@ router.get('/SupportResultSummary', utils.authenticateToken, async(req, res) => 
 });
 
 //====================================================================================
+//
+// Support by Race report
+//
+// Returns the support by race based on the Support Results values recorded
+// in the action log.
+// 
+//====================================================================================
+router.get('/SupportByRace', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /SupportByRace', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/SupportByRace')
+            return res.status(200).send( await report() )
+        } catch (e) {
+            return res.status(400).send(`Error generating Support by Race report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /SupportByRace', 'Unknown error in GET /SupportByRace', e))
+        throw e
+    }
+});
+
+//====================================================================================
+//
+// Support by Income report
+//
+// Returns the support by income based on the Support Results values recorded
+// in the action log.
+// 
+//====================================================================================
+router.get('/SupportByIncome', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /SupportByIncome', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/SupportByIncome')
+            return res.status(200).send( await report() )
+        } catch (e) {
+            return res.status(400).send(`Error generating Support by Income report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /SupportByIncome', 'Unknown error in GET /SupportByIncome', e))
+        throw e
+    }
+});
+
+//====================================================================================
+//
+// Support by Education report
+//
+// Returns the support by education based on the Support Results values recorded
+// in the action log.
+// 
+//====================================================================================
+router.get('/SupportByEducation', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /SupportByEducation', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/SupportByEducation')
+            return res.status(200).send( await report() )
+        } catch (e) {
+            return res.status(400).send(`Error generating Support by Education report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /SupportByEducation', 'Unknown error in GET /SupportByEducation', e))
+        throw e
+    }
+});
+
+//====================================================================================
 // DonationCallsToDate report
 //
 // Returns a summary of the contact actions for an actor or a campaign
@@ -176,9 +299,10 @@ router.get('/ContactActionLog', utils.authenticateToken, async(req, res) => {
 });
 
 //====================================================================================
-// Contact Action Log report
 //
-// Returns the Contact Action Logs for and actor or a campaign
+// Person Contact History report
+//
+// Returns the Contact Action Log response records for a specific person
 // 
 //====================================================================================
 router.get('/PersonContactHistory', utils.authenticateToken, async(req, res) => {
