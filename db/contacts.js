@@ -128,35 +128,81 @@ module.exports = {
     //===================================================================================
     async markContactAsLeased(contact, actor) {
        
-        // Build the SQL
-        var sql = ""
+        // Build the SQL for inserts
+        var insertSQL = "INSERT INTO base.contact_status (person_id, lease_time, last_contact_attempt_time, modified_by)\r\n"
+        insertSQL += `VALUES ( ${contact.personId}`
+        insertSQL += `, NOW(), NOW(), '${actor.username}'`
+        insertSQL += ");"
+
+        // Build the SQL for updates
+        var updateSQL = "UPDATE base.contact_status\r\n"
+        updateSQL += `SET lease_time = NOW()\r\n`
+        updateSQL += `, last_contact_attempt_time = NOW()\r\n`
+        updateSQL += `, modified_by = '${actor.username}'\r\n`
+        updateSQL += `, date_modified = NOW()\r\n`
+        updateSQL += `WHERE person_id = ${contact.personId};`
+
+        // if( contact.isVirtual ) {
+        //     // The status record doesn't exist so we do an insert
+        //     sql = "INSERT INTO base.contact_status (person_id, lease_time, last_contact_attempt_time, modified_by)\r\n"
+        //     sql += `VALUES ( ${contact.personId}`
+        //     sql += `, NOW(), NOW(), '${actor.username}'`
+        //     sql += ");"
+        // } else {
+        //     // Update the existing status record
+        //     sql = "UPDATE base.contact_status\r\n"
+        //     sql += `SET lease_time = NOW()\r\n`
+        //     sql += `, last_contact_attempt_time = NOW()\r\n`
+        //     sql += `, modified_by = '${actor.username}'\r\n`
+        //     sql += `, date_modified = NOW()\r\n`
+        //     sql += `WHERE person_id = ${contact.personId};`
+        // }
+        
         if( contact.isVirtual ) {
-            // The status record doesn't exist so we do an insert
-            sql = "INSERT INTO base.contact_status (person_id, lease_time, last_contact_attempt_time, modified_by)\r\n"
-            sql += `VALUES ( ${contact.personId}`
-            sql += `, NOW(), NOW(), '${actor.username}'`
-            sql += ");"
+            // The status record doesn't exist so we attempt an insert
+            try {
+                // For debugging
+                //console.log(insertSQL)
+                await db.query(insertSQL)
+                return // Success
+            } catch(e) {
+                // Insert failed. If it's a primary key error then try an update instead.
+                if( e.message.includes('duplicate key value violates unique constraint') ) {
+                    try {
+                        // For debugging
+                        //console.log(updateSQL)
+                        await db.query(updateSQL)
+                        return // Success
+                    } catch(e) {
+                        ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'markContactAsLeased', 'Database error updating contact as leased', e))
+                        throw new Error(e.message)
+                    }
+                } else {
+                    ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'markContactAsLeased', 'Database error inserting contact leased record', e))
+                    throw new Error(e.message)
+                }
+            }
         } else {
             // Update the existing status record
-            sql = "UPDATE base.contact_status\r\n"
-            sql += `SET lease_time = NOW()\r\n`
-            sql += `, last_contact_attempt_time = NOW()\r\n`
-            sql += `, modified_by = '${actor.username}'\r\n`
-            sql += `, date_modified = NOW()\r\n`
-            sql += `WHERE person_id = ${contact.personId};`
+            // For debugging
+            //console.log(updateSQL)
+            try {
+                await db.query(updateSQL)
+                return // Success
+            } catch(e) {
+                ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'markContactAsLeased', 'Database error updating contact as leased', e))
+                throw new Error(e.message)
+            }
         }
-        
-        // For debugging
-        //console.log(sql)
-    
-        // Execute the query and return the client
-        try {
-            const dbres = await db.query(sql)
-            return // Success
-        } catch(e) {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'markContactAsLeased', 'Database error marking contact as leased', e))
-            throw new Error(e.message)
-        }
+
+        // // Execute the query and return the client
+        // try {
+        //     const dbres = await db.query(sql)
+        //     return // Success
+        // } catch(e) {
+        //     ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'markContactAsLeased', 'Database error marking contact as leased', e))
+        //     throw new Error(e.message)
+        // }
     }
 
    } // End of module.export
