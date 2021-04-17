@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const app = express()
 require('dotenv').config()
+require('./messaging/contactActionListener')
 
 app.use(bodyParser.json())
 //app.use(bodyParser.urlencoded({ extended: true }))

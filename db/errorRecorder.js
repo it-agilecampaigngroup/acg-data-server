@@ -24,7 +24,7 @@ module.exports = {
         insert += `, '${db.formatTextForSQL(error.process)}'\r\n`
         insert += `, '${db.formatTextForSQL(error.description)}'\r\n`
         if( error.error != "" ) {
-            insert += `, '${JSON.stringify(error.error)}'`
+            insert += `, '${db.formatTextForSQL(JSON.stringify(error.error))}'`
         } else {
             insert += ", NULL"
         }

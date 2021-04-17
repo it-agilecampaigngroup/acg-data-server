@@ -65,8 +65,6 @@ async function processContactRespondedResponse(response) {
             switch(response.contactReason.toUpperCase()) {
                 
                 case "DONATION REQUEST": 
-                    // TODO: Set donation_request_allowed_date = "today" + 6 months
-                    // and set persuasion_attempt_allowed_date = "today" + 2 weeks
                     // Update the existing status record
                     sql = "UPDATE base.contact_status\r\n"
                     sql += `SET donation_request_allowed_date = NOW() + INTERVAL '6 months'\r\n`
@@ -78,7 +76,7 @@ async function processContactRespondedResponse(response) {
                     break;
 
                 case "PERSUASION":
-                    // TODO: Set donation_request_allowed_date = "today" + 7 days
+                    // Set donation_request_allowed_date = "today" + 7 days
                     // and set persuasion_attempt_allowed_date = "today" + 7 days
                     sql = "UPDATE base.contact_status\r\n"
                     sql += `SET donation_request_allowed_date = NOW() + INTERVAL '7 days'\r\n`
@@ -90,7 +88,7 @@ async function processContactRespondedResponse(response) {
                     break;
 
                 case "TURNOUT":
-                    // TODO: Nothing to do
+                    // Nothing to do
                     break;
 
                 default:
@@ -178,7 +176,7 @@ async function processContactAttemptFailedResponse(response) {
             switch(response.contactMethod.toUpperCase()) {
 
                 case "PHONE CALL":
-                    // TODO: If the method is "Phone call" then increment
+                    // If the method is "Phone call" then increment
                     // the do_not_call_count value and set the 
                     // last_do_not_call_date to "today" in the person_phone 
                     // table. This will prevent any calls to this number for
@@ -265,7 +263,7 @@ async function processContactRejectedResponse(response) {
             // until their status has been reviewed and modified.
             sql = "UPDATE base.contact_status\r\n"
             sql += `SET review_required = true\r\n`
-            sql += `, review_required_note = '${db.formatTextForSQL(response.detail.note)}'`
+            sql += `, review_required_note = '${db.formatTextForSQL(response.detail.note)}'\r\n`
             sql += `, modified_by = '${response.actor.username}'\r\n`
             sql += `, date_modified = NOW()\r\n`
             sql += `WHERE person_id = ${response.detail.personId};`

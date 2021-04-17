@@ -3,7 +3,7 @@
 class ContactAction {
     constructor(contactAction, actor, contactReason, contactMethod, contactResult, detail) {
         this.contactAction = contactAction
-        this.timestamp = Date()
+        this.timestamp = new Date()
         this.clientId = actor.campaign.client.clientId
         this.campaignId = actor.campaignId
         this.actor = actor
