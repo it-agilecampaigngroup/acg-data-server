@@ -39,7 +39,7 @@ router.get('/SupportResultSummary', utils.authenticateToken, async(req, res) => 
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /SupportResultSummary', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /SupportResultSummary', 'Unknown error in GET /', e))
             throw e
         })
 
@@ -104,7 +104,7 @@ router.get('/SupportByRace', utils.authenticateToken, async(req, res) => {
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /SupportByRace', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /SupportByRace', 'Unknown error in GET /', e))
             throw e
         })
 
@@ -145,7 +145,7 @@ router.get('/SupportByIncome', utils.authenticateToken, async(req, res) => {
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /SupportByIncome', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /SupportByIncome', 'Unknown error in GET /', e))
             throw e
         })
 
@@ -186,7 +186,7 @@ router.get('/SupportByEducation', utils.authenticateToken, async(req, res) => {
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /SupportByEducation', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /SupportByEducation', 'Unknown error in GET /', e))
             throw e
         })
 
@@ -210,6 +210,209 @@ router.get('/SupportByEducation', utils.authenticateToken, async(req, res) => {
 });
 
 //====================================================================================
+//
+// Donations Summary report
+//
+// Returns a summary of a campaign's donations
+// 
+//====================================================================================
+router.get('/DonationSummary', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationSummary', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/DonationSummary')
+            return res.status(200).send( await report(actor.campaignId, req.query.lowDonationAmount, req.query.donationLimitAmount, req.query.contactMethod) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Donation Summary report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationSummary', 'Unknown error in GET /DonationSummary', e))
+        throw e
+    }
+});
+
+//====================================================================================
+//
+// Large Donation Donors report
+//
+// Returns a list of donors that have made large contributions
+// 
+//====================================================================================
+router.get('/LargeDonationDonors', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /LargeDonationDonors', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/LargeDonationDonors')
+            return res.status(200).send( await report(actor.campaignId, req.query.largeDonationThreshold, req.query.contactMethod) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Large Donation Donors report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /LargeDonationDonors', 'Unknown error in GET /LargeDonationDonors', e))
+        throw e
+    }
+});
+
+//====================================================================================
+//
+// Donations by Race report
+//
+// Returns donation information categorized by race. Informatiom includes
+// total donations, average donations, and the number of "yes" and "no" responses.
+// 
+//====================================================================================
+router.get('/DonationByRace', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationByRace', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/DonationByRace')
+            return res.status(200).send( await report(actor.campaignId, req.query.contactMethod) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Donation by Race report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationByRace', 'Unknown error in GET /DonationByRace', e))
+        throw e
+    }
+});
+
+//====================================================================================
+//
+// Donations by Income report
+//
+// Returns donation information categorized by income level. Informatiom includes
+// total donations, average donations, and the number of "yes" and "no" responses.
+// 
+//====================================================================================
+router.get('/DonationByIncome', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationByIncome', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/DonationByIncome')
+            return res.status(200).send( await report(actor.campaignId, req.query.contactMethod) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Donation by Income report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationByIncome', 'Unknown error in GET /DonationByIncome', e))
+        throw e
+    }
+});
+
+//====================================================================================
+//
+// Donations by Education report
+//
+// Returns donation information categorized by education level. Informatiom includes
+// total donations, average donations, and the number of "yes" and "no" responses.
+// 
+//====================================================================================
+router.get('/DonationByEducation', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationByEducation', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/DonationByEducation')
+            return res.status(200).send( await report(actor.campaignId, req.query.contactMethod) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Donation by Education report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationByEducation', 'Unknown error in GET /DonationByEducation', e))
+        throw e
+    }
+});
+
+//====================================================================================
 // DonationCallsToDate report
 //
 // Returns a summary of the contact actions for an actor or a campaign
@@ -225,7 +428,7 @@ router.get('/DonationCallsToDate', utils.authenticateToken, async(req, res) => {
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /DonationCallsToDate', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationCallsToDate', 'Unknown error in GET /', e))
             throw e
         })
 
@@ -288,7 +491,7 @@ router.get('/ContactActionLog', utils.authenticateToken, async(req, res) => {
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /ContactActionLog', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /ContactActionLog', 'Unknown error in GET /', e))
             throw e
         })
         
@@ -353,7 +556,7 @@ router.get('/PersonContactHistory', utils.authenticateToken, async(req, res) => 
             actor = got_actor
         })
         .catch( (e) => {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/contact.js', 'GET /PersonContactHistory', 'Unknown error in GET /', e))
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /PersonContactHistory', 'Unknown error in GET /', e))
             throw e
         })
 

@@ -51,6 +51,7 @@ function buildSQL(campaignId) {
     sql += `    , ROUND(100 * SUM(supportive) / SUM(supportive + neutral + opposed)) total_supportive_perc\r\n`
     sql += `	, ROUND(100 * SUM(neutral) / SUM(supportive + neutral + opposed)) total_neutral_perc\r\n`
     sql += `	, ROUND(100 * SUM(opposed) / SUM(supportive + neutral + opposed)) total_opposed_perc\r\n`
+    
     sql += `	, ROUND(100 * SUM(hispanic_supportive) / SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed)) hispanic_supportive_perc\r\n`
     sql += `	, ROUND(100 * SUM(hispanic_neutral) / SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed)) hispanic_neutral_perc\r\n`
     sql += `	, ROUND(100 * SUM(hispanic_opposed) / SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed)) hispanic_opposed_perc\r\n`
