@@ -17,32 +17,43 @@ module.exports = async function generate(campaignId, contactMethod) {
         const dbres = await db.query(sql)
         if( dbres.rowCount >= 1) {
             const row = dbres.rows[0]
+
             return {
                 totalAmount: parseFloat(row.total_amount)
                 , averageAmount: parseFloat(row.average_amount)
                 , yesCount: parseInt(row.yes_count)
                 , noCount: parseInt(row.no_count)
                 , responseCount: parseInt(row.response_count)
+                , yesPercent: parseInt(row.yes_perc)
+                , noPercent: parseInt(row.no_perc)
                 
                 , hsAndUnderAmount: parseFloat(row.hs_and_under_amount)
                 , hsAndUnderAverageAmount: parseFloat(row.hs_and_under_average)
-                , hsAndUnderYesCount: parseInt(row.hs_and_under_yes_count)
-                , hsAndUnderNoCount: parseInt(row.hs_and_under_no_count)
+                , hsAndUnderYesCount: parseFloat(row.hs_and_under_yes_count)
+                , hsAndUnderNoCount: parseFloat(row.hs_and_under_no_count)
+                , hsAndUnderYesPercent: parseInt(row.hs_and_under_yes_perc)
+                , hsAndUnderNoPercent: parseInt(row.hs_and_under_no_perc)
                 
                 , someCollegeAmount: parseFloat(row.some_college_amount)
                 , someCollegeAverageAmount: parseFloat(row.some_college_average)
-                , someCollegeYesCount: parseInt(row.some_college_yes_count)
-                , someCollegeNoCount: parseInt(row.some_college_no_count)
+                , someCollegeYesCount: parseFloat(row.some_college_yes_count)
+                , someCollegeNoCount: parseFloat(row.some_college_no_count)
+                , someCollegeYesPercent: parseInt(row.some_college_yes_perc)
+                , someCollegeNoPercent: parseInt(row.some_college_no_perc)
                 
                 , bachelorsAmount: parseFloat(row.ba_amount)
                 , bachelorsAverageAmount: parseFloat(row.ba_average)
-                , bachelorsYesCount: parseInt(row.ba_yes_count)
-                , bachelorsNoCount: parseInt(row.ba_no_count)
+                , bachelorsYesCount: parseFloat(row.ba_yes_count)
+                , bachelorsNoCount: parseFloat(row.ba_no_count)
+                , bachelorsYesPercent: parseInt(row.ba_yes_perc)
+                , bachelorsNoPercent: parseInt(row.ba_no_perc)
                 
                 , mastersPlusAmount: parseFloat(row.ma_plus_amount)
                 , mastersPlusAverageAmount: parseFloat(row.ma_plus_average)
-                , mastersPlusYesCount: parseInt(row.ma_plus_yes_count)
-                , mastersPlusNoCount: parseInt(row.ma_plus_no_count)
+                , mastersPlusYesCount: parseFloat(row.ma_plus_yes_count)
+                , mastersPlusNoCount: parseFloat(row.ma_plus_no_count)
+                , mastersPlusYesPercent: parseInt(row.ma_plus_yes_perc)
+                , mastersPlusNoPercent: parseInt(row.ma_plus_no_perc)
             }
         }
         return undefined
@@ -62,6 +73,8 @@ function buildSQL(campaignId, contactMethod) {
     sql += `, SUM(d.yes_count) yes_count\r\n`
     sql += `, SUM(d.no_count) no_count\r\n`
     sql += `, SUM(d.response_count) response_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.yes_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.no_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) no_perc\r\n`
 
     sql += `-- HS and under\r\n`
     sql += `, ROUND(SUM(d.hs_and_under_amount), 2) hs_and_under_amount\r\n`
@@ -69,8 +82,10 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    THEN ROUND(SUM(d.hs_and_under_amount)/ROUND(SUM(d.hs_and_under_yes_count)), 2)\r\n`
     sql += `    ELSE ROUND(SUM(d.hs_and_under_amount), 2)\r\n`
     sql += `    END hs_and_under_average\r\n`
-    sql += `, ROUND(SUM(d.hs_and_under_yes_count)) hs_and_under_yes_count\r\n`
-    sql += `, ROUND(SUM(d.hs_and_under_no_count)) hs_and_under_no_count\r\n`
+    sql += `, ROUND(SUM(d.hs_and_under_yes_count), 2) hs_and_under_yes_count\r\n`
+    sql += `, ROUND(SUM(d.hs_and_under_no_count), 2) hs_and_under_no_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.hs_and_under_yes_count) AS decimal)) / ( SUM(d.hs_and_under_yes_count) + SUM(d.hs_and_under_no_count) )) hs_and_under_yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.hs_and_under_no_count) AS decimal)) / ( SUM(d.hs_and_under_yes_count) + SUM(d.hs_and_under_no_count) )) hs_and_under_no_perc\r\n`
 
     sql += `-- Some college\r\n`
     sql += `, ROUND(SUM(d.some_college_amount), 2) some_college_amount\r\n`
@@ -78,8 +93,10 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    THEN ROUND(SUM(d.some_college_amount)/ROUND(SUM(d.some_college_yes_count)), 2)\r\n`
     sql += `    ELSE ROUND(SUM(d.some_college_amount), 2)\r\n`
     sql += `    END some_college_average\r\n`
-    sql += `, ROUND(SUM(d.some_college_yes_count)) some_college_yes_count\r\n`
-    sql += `, ROUND(SUM(d.some_college_no_count)) some_college_no_count\r\n`
+    sql += `, ROUND(SUM(d.some_college_yes_count), 2) some_college_yes_count\r\n`
+    sql += `, ROUND(SUM(d.some_college_no_count), 2) some_college_no_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.some_college_yes_count) AS decimal)) / ( SUM(d.some_college_yes_count) + SUM(d.some_college_no_count) )) some_college_yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.some_college_no_count) AS decimal)) / ( SUM(d.some_college_yes_count) + SUM(d.some_college_no_count) )) some_college_no_perc\r\n`
 
     sql += `-- BA\r\n`
     sql += `, ROUND(SUM(d.ba_amount), 2) ba_amount\r\n`
@@ -87,8 +104,10 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    THEN ROUND(SUM(d.ba_amount)/ROUND(SUM(d.ba_yes_count)), 2)\r\n`
     sql += `    ELSE ROUND(SUM(d.ba_amount), 2)\r\n`
     sql += `    END ba_average\r\n`
-    sql += `, ROUND(SUM(d.ba_yes_count)) ba_yes_count\r\n`
-    sql += `, ROUND(SUM(d.ba_no_count)) ba_no_count\r\n`
+    sql += `, ROUND(SUM(d.ba_yes_count), 2) ba_yes_count\r\n`
+    sql += `, ROUND(SUM(d.ba_no_count), 2) ba_no_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.ba_yes_count) AS decimal)) / ( SUM(d.ba_yes_count) + SUM(d.ba_no_count) )) ba_yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.ba_no_count) AS decimal)) / ( SUM(d.ba_yes_count) + SUM(d.ba_no_count) )) ba_no_perc\r\n`
 
     sql += `-- MA plus\r\n`
     sql += `, ROUND(SUM(d.ma_plus_amount), 2) ma_plus_amount\r\n`
@@ -96,8 +115,10 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    THEN ROUND(SUM(d.ma_plus_amount)/ROUND(SUM(d.ma_plus_yes_count)), 2)\r\n`
     sql += `    ELSE ROUND(SUM(d.ma_plus_amount), 2)\r\n`
     sql += `    END ma_plus_average\r\n`
-    sql += `, ROUND(SUM(d.ma_plus_yes_count)) ma_plus_yes_count\r\n`
-    sql += `, ROUND(SUM(d.ma_plus_no_count)) ma_plus_no_count\r\n`
+    sql += `, ROUND(SUM(d.ma_plus_yes_count), 2) ma_plus_yes_count\r\n`
+    sql += `, ROUND(SUM(d.ma_plus_no_count), 2) ma_plus_no_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.ma_plus_yes_count) AS decimal)) / ( SUM(d.ma_plus_yes_count) + SUM(d.ma_plus_no_count) )) ma_plus_yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.ma_plus_no_count) AS decimal)) / ( SUM(d.ma_plus_yes_count) + SUM(d.ma_plus_no_count) )) ma_plus_no_perc\r\n`
 
     sql += `FROM (\r\n`
     sql += `    SELECT donations.amount, donations.yes_count, donations.no_count, donations.response_count\r\n`

@@ -24,6 +24,7 @@ module.exports = async function generate(campaignId, actorId, dateStart, dateEnd
                 , dateEnd: dateEnd
                 , contactRequestCount: parseInt(row.contact_request_count)
                 , totalReponseCount: parseInt(row.total_reponse_count)
+                , contactReachedCount: parseInt(row.contact_reached_count)
                 , positiveReponseCount: parseInt(row.positive_reponse_count)
                 , negativeReponseCount: parseInt(row.negative_reponse_count)
                 , failedAttemptCount: parseInt(row.failed_attempt_count)
@@ -60,7 +61,9 @@ function buildSQL(campaignId, actorId, dateStart, dateEnd) {
 
     sql += `, (SELECT COUNT(date_created)\r\n`
     sql += `FROM base.v_contact_action_log\r\n`
-    sql += `WHERE contact_action ILIKE 'Contact responded'\r\n`
+    sql += `WHERE (contact_action ILIKE 'Contact responded'\r\n`
+    sql += `    OR contact_action ILIKE 'Contact rejected'\r\n`
+    sql += `    OR contact_action ILIKE 'Contact attempt failed')\r\n`
     sql += `AND contact_method ILIKE 'Phone call'\r\n`
     sql += `AND contact_reason ILIKE 'Donation request'\r\n`
     sql += `AND campaign_id = ${campaignId}\r\n`
@@ -68,6 +71,17 @@ function buildSQL(campaignId, actorId, dateStart, dateEnd) {
     sql += `AND date_created >= '${dateStart}'\r\n`
     sql += `AND date_created < '${dateEnd}'\r\n`
     sql += `) total_reponse_count\r\n`
+
+    sql += `, (SELECT COUNT(date_created)\r\n`
+    sql += `FROM base.v_contact_action_log\r\n`
+    sql += `WHERE contact_action ILIKE 'Contact responded'\r\n`
+    sql += `AND contact_method ILIKE 'Phone call'\r\n`
+    sql += `AND contact_reason ILIKE 'Donation request'\r\n`
+    sql += `AND campaign_id = ${campaignId}\r\n`
+    if( actorId != 0 ) { sql += `AND actor_id = ${actorId}\r\n` }
+    sql += `AND date_created >= '${dateStart}'\r\n`
+    sql += `AND date_created < '${dateEnd}'\r\n`
+    sql += `) contact_reached_count\r\n`
 
     sql += `, (SELECT COUNT(date_created)\r\n`
     sql += `FROM base.v_contact_action_log\r\n`

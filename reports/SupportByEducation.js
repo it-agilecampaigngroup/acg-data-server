@@ -136,7 +136,7 @@ function buildSQL(campaignId) {
     sql += `        / edu.est_schooling_total_pop ma_plus_opposed\r\n`
 
     sql += `    FROM (\r\n`
-    sql += `            SELECT DISTINCT CAST(cal.detail ->> 'personId' AS BIGINT) person_id\r\n`
+    sql += `            SELECT CAST(cal.detail ->> 'personId' AS BIGINT) person_id\r\n`
     sql += `                    , CASE WHEN CAST(cal.detail ->> 'supportResult' AS INTEGER) < 3 THEN 1 ELSE 0 END supportive\r\n`
     sql += `                    , CASE WHEN CAST(cal.detail ->> 'supportResult' AS INTEGER) = 3 THEN 1 ELSE 0 END neutral\r\n`
     sql += `                    , CASE WHEN CAST(cal.detail ->> 'supportResult' AS INTEGER) > 3 THEN 1 ELSE 0 END opposed\r\n`

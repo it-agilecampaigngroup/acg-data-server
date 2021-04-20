@@ -85,7 +85,7 @@ function buildSQL(campaignId) {
     sql += `	, act.neutral * CAST(census.white_pop AS decimal)/census.total_pop white_neutral\r\n`
     sql += `	, act.opposed * CAST(census.white_pop AS decimal)/census.total_pop white_opposed\r\n`
     sql += `	FROM (\r\n`
-    sql += `		SELECT DISTINCT CAST(cal.detail ->> 'personId' AS BIGINT) person_id\r\n`
+    sql += `		SELECT CAST(cal.detail ->> 'personId' AS BIGINT) person_id\r\n`
     sql += `			, CASE WHEN CAST(cal.detail ->> 'supportResult' AS INTEGER) < 3 THEN 1 ELSE 0 END supportive\r\n`
     sql += `			, CASE WHEN CAST(cal.detail ->> 'supportResult' AS INTEGER) = 3 THEN 1 ELSE 0 END neutral\r\n`
     sql += `			, CASE WHEN CAST(cal.detail ->> 'supportResult' AS INTEGER) > 3 THEN 1 ELSE 0 END opposed\r\n`

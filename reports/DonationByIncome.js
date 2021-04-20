@@ -17,37 +17,50 @@ module.exports = async function generate(campaignId, contactMethod) {
         const dbres = await db.query(sql)
         if( dbres.rowCount >= 1) {
             const row = dbres.rows[0]
+
             return {
                 totalAmount: parseFloat(row.total_amount)
                 , averageAmount: parseFloat(row.average_amount)
                 , yesCount: parseInt(row.yes_count)
                 , noCount: parseInt(row.no_count)
                 , responseCount: parseInt(row.response_count)
+                , yesPercent: parseInt(row.yes_perc)
+                , noPercent: parseInt(row.no_perc)
                 
                 , under10KAmount: parseFloat(row.under_10k_amount)
                 , under10KAverageAmount: parseFloat(row.under_10k_average)
-                , under10KYesCount: parseInt(row.under_10k_yes_count)
-                , under10KNoCount: parseInt(row.under_10k_no_count)
+                , under10KYesCount: parseFloat(row.under_10k_yes_count)
+                , under10KNoCount: parseFloat(row.under_10k_no_count)
+                , under10KYesPercent: parseInt(row.under_10k_yes_perc)
+                , under10KNoPercent: parseInt(row.under_10k_no_perc)
                 
                 , tenTo24KAmount: parseFloat(row.ten_to_24k_amount)
                 , tenTo24KAverageAmount: parseFloat(row.ten_to_24k_average)
-                , tenTo24KYesCount: parseInt(row.ten_to_24k_yes_count)
-                , tenTo24KNoCount: parseInt(row.ten_to_24k_no_count)
+                , tenTo24KYesCount: parseFloat(row.ten_to_24k_yes_count)
+                , tenTo24KNoCount: parseFloat(row.ten_to_24k_no_count)
+                , tenTo24KYesPercent: parseInt(row.ten_to_24k_yes_perc)
+                , tenTo24KNoPercent: parseInt(row.ten_to_24k_no_perc)
                 
                 , twentyFiveTo49KAmount: parseFloat(row.twenty_five_to_49k_amount)
                 , twentyFiveTo49KAverageAmount: parseFloat(row.twenty_five_to_49k_average)
-                , twentyFiveTo49KYesCount: parseInt(row.twenty_five_to_49k_yes_count)
-                , twentyFiveTo49KNoCount: parseInt(row.twenty_five_to_49k_no_count)
+                , twentyFiveTo49KYesCount: parseFloat(row.twenty_five_to_49k_yes_count)
+                , twentyFiveTo49KNoCount: parseFloat(row.twenty_five_to_49k_no_count)
+                , twentyFiveTo49KYesPercent: parseInt(row.twenty_five_to_49k_yes_perc)
+                , twentyFiveTo49KNoPercent: parseInt(row.twenty_five_to_49k_no_perc)
                 
                 , fiftyTo74KAmount: parseFloat(row.fifty_to_74k_amount)
                 , fiftyTo74KAverageAmount: parseFloat(row.fifty_to_74k_average)
-                , fiftyTo74KYesCount: parseInt(row.fifty_to_74k_yes_count)
-                , fiftyTo74KNoCount: parseInt(row.fifty_to_74k_no_count)
+                , fiftyTo74KYesCount: parseFloat(row.fifty_to_74k_yes_count)
+                , fiftyTo74KNoCount: parseFloat(row.fifty_to_74k_no_count)
+                , fiftyTo74KYesPercent: parseInt(row.fifty_to_74k_yes_perc)
+                , fiftyTo74KNoPercent: parseInt(row.fifty_to_74k_no_perc)
                 
                 , seventyFiveKAndUpAmount: parseFloat(row.seventy_five_and_up_amount)
                 , seventyFiveKAndUpAverageAmount: parseFloat(row.seventy_five_and_up_average)
-                , seventyFiveKAndUpYesCount: parseInt(row.seventy_five_and_up_yes_count)
-                , seventyFiveKAndUpNoCount: parseInt(row.seventy_five_and_up_no_count)
+                , seventyFiveKAndUpYesCount: parseFloat(row.seventy_five_and_up_yes_count)
+                , seventyFiveKAndUpNoCount: parseFloat(row.seventy_five_and_up_no_count)
+                , seventyFiveKAndUpYesPercent: parseInt(row.seventy_five_and_up_yes_perc)
+                , seventyFiveKAndUpNoPercent: parseInt(row.seventy_five_and_up_no_perc)
             }
         }
         return undefined
@@ -67,6 +80,8 @@ function buildSQL(campaignId, contactMethod) {
     sql += `, SUM(d.yes_count) yes_count\r\n`
     sql += `, SUM(d.no_count) no_count\r\n`
     sql += `, SUM(d.response_count) response_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.yes_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.no_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) no_perc\r\n`
     
     sql += `-- Under 10k\r\n`
     sql += `, ROUND(SUM(d.under_10k_amount), 2) under_10k_amount\r\n`
@@ -74,8 +89,10 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    THEN ROUND(SUM(d.under_10k_amount)/ROUND(SUM(d.under_10k_yes_count)), 2)\r\n`
     sql += `    ELSE ROUND(SUM(d.under_10k_amount), 2)\r\n`
     sql += `    END under_10k_average\r\n`
-    sql += `, ROUND(SUM(d.under_10k_yes_count)) under_10k_yes_count\r\n`
-    sql += `, ROUND(SUM(d.under_10k_no_count)) under_10k_no_count\r\n`
+    sql += `, ROUND(SUM(d.under_10k_yes_count), 2) under_10k_yes_count\r\n`
+    sql += `, ROUND(SUM(d.under_10k_no_count), 2) under_10k_no_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.under_10k_yes_count) AS decimal)) / ( SUM(d.under_10k_yes_count) + SUM(d.under_10k_no_count) )) under_10k_yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.under_10k_no_count) AS decimal)) / ( SUM(d.under_10k_yes_count) + SUM(d.under_10k_no_count) )) under_10k_no_perc\r\n`
     
     sql += `-- 10K to 24K\r\n`
     sql += `, ROUND(SUM(d.ten_to_24k_amount), 2) ten_to_24k_amount\r\n`
@@ -83,8 +100,10 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    THEN ROUND(SUM(d.ten_to_24k_amount)/ROUND(SUM(d.ten_to_24k_yes_count)), 2)\r\n`
     sql += `    ELSE ROUND(SUM(d.ten_to_24k_amount), 2)\r\n`
     sql += `    END ten_to_24k_average\r\n`
-    sql += `, ROUND(SUM(d.ten_to_24k_yes_count)) ten_to_24k_yes_count\r\n`
-    sql += `, ROUND(SUM(d.ten_to_24k_no_count)) ten_to_24k_no_count\r\n`
+    sql += `, ROUND(SUM(d.ten_to_24k_yes_count), 2) ten_to_24k_yes_count\r\n`
+    sql += `, ROUND(SUM(d.ten_to_24k_no_count), 2) ten_to_24k_no_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.ten_to_24k_yes_count) AS decimal)) / ( SUM(d.ten_to_24k_yes_count) + SUM(d.ten_to_24k_no_count) )) ten_to_24k_yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.ten_to_24k_no_count) AS decimal)) / ( SUM(d.ten_to_24k_yes_count) + SUM(d.ten_to_24k_no_count) )) ten_to_24k_no_perc\r\n`
     
     sql += `-- 25K to 49K\r\n`
     sql += `, ROUND(SUM(d.twenty_five_to_49k_amount), 2) twenty_five_to_49k_amount\r\n`
@@ -92,8 +111,10 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    THEN ROUND(SUM(d.twenty_five_to_49k_amount)/ROUND(SUM(d.twenty_five_to_49k_yes_count)), 2)\r\n`
     sql += `    ELSE ROUND(SUM(d.twenty_five_to_49k_amount), 2)\r\n`
     sql += `    END twenty_five_to_49k_average\r\n`
-    sql += `, ROUND(SUM(d.twenty_five_to_49k_yes_count)) twenty_five_to_49k_yes_count\r\n`
-    sql += `, ROUND(SUM(d.twenty_five_to_49k_no_count)) twenty_five_to_49k_no_count\r\n`
+    sql += `, ROUND(SUM(d.twenty_five_to_49k_yes_count), 2) twenty_five_to_49k_yes_count\r\n`
+    sql += `, ROUND(SUM(d.twenty_five_to_49k_no_count), 2) twenty_five_to_49k_no_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.twenty_five_to_49k_yes_count) AS decimal)) / ( SUM(d.twenty_five_to_49k_yes_count) + SUM(d.twenty_five_to_49k_no_count) )) twenty_five_to_49k_yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.twenty_five_to_49k_no_count) AS decimal)) / ( SUM(d.twenty_five_to_49k_yes_count) + SUM(d.twenty_five_to_49k_no_count) )) twenty_five_to_49k_no_perc\r\n`
     
     sql += `-- 50K to 74K\r\n`
     sql += `, ROUND(SUM(d.fifty_to_74k_amount), 2) fifty_to_74k_amount\r\n`
@@ -101,8 +122,10 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    THEN ROUND(SUM(d.fifty_to_74k_amount)/ROUND(SUM(d.fifty_to_74k_yes_count)), 2)\r\n`
     sql += `    ELSE ROUND(SUM(d.fifty_to_74k_amount), 2)\r\n`
     sql += `    END fifty_to_74k_average\r\n`
-    sql += `, ROUND(SUM(d.fifty_to_74k_yes_count)) fifty_to_74k_yes_count\r\n`
-    sql += `, ROUND(SUM(d.fifty_to_74k_no_count)) fifty_to_74k_no_count\r\n`
+    sql += `, ROUND(SUM(d.fifty_to_74k_yes_count), 2) fifty_to_74k_yes_count\r\n`
+    sql += `, ROUND(SUM(d.fifty_to_74k_no_count), 2) fifty_to_74k_no_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.fifty_to_74k_yes_count) AS decimal)) / ( SUM(d.fifty_to_74k_yes_count) + SUM(d.fifty_to_74k_no_count) )) fifty_to_74k_yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.fifty_to_74k_no_count) AS decimal)) / ( SUM(d.fifty_to_74k_yes_count) + SUM(d.fifty_to_74k_no_count) )) fifty_to_74k_no_perc\r\n`
     
     sql += `-- 75K and up\r\n`
     sql += `, ROUND(SUM(d.seventy_five_and_up_amount), 2) seventy_five_and_up_amount\r\n`
@@ -110,8 +133,10 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    THEN ROUND(SUM(d.seventy_five_and_up_amount)/ROUND(SUM(d.seventy_five_and_up_yes_count)), 2)\r\n`
     sql += `    ELSE ROUND(SUM(d.seventy_five_and_up_amount), 2)\r\n`
     sql += `    END seventy_five_and_up_average\r\n`
-    sql += `, ROUND(SUM(d.seventy_five_and_up_yes_count)) seventy_five_and_up_yes_count\r\n`
-    sql += `, ROUND(SUM(d.seventy_five_and_up_no_count)) seventy_five_and_up_no_count\r\n`
+    sql += `, ROUND(SUM(d.seventy_five_and_up_yes_count), 2) seventy_five_and_up_yes_count\r\n`
+    sql += `, ROUND(SUM(d.seventy_five_and_up_no_count), 2) seventy_five_and_up_no_count\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.seventy_five_and_up_yes_count) AS decimal)) / ( SUM(d.seventy_five_and_up_yes_count) + SUM(d.seventy_five_and_up_no_count) )) seventy_five_and_up_yes_perc\r\n`
+    sql += `, ROUND( (100 * CAST(SUM(d.seventy_five_and_up_no_count) AS decimal)) / ( SUM(d.seventy_five_and_up_yes_count) + SUM(d.seventy_five_and_up_no_count) )) seventy_five_and_up_no_perc\r\n`
     
     sql += `FROM (\r\n`
     sql += `    SELECT donations.amount, donations.yes_count, donations.no_count, donations.response_count\r\n`

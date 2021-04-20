@@ -3,6 +3,7 @@
 const db = require('../db/db')
 const AppError = require('../modules/AppError')
 const ErrorRecorder = require('../db/errorRecorder')
+const { callbackPromise } = require('nodemailer/lib/shared')
 
 module.exports = async function generate(campaignId, lowDonationAmount, donationLimitAmount, contactMethod) {
 
