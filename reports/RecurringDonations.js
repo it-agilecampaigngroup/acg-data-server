@@ -4,10 +4,10 @@ const db = require('../db/db')
 const AppError = require('../modules/AppError')
 const ErrorRecorder = require('../db/errorRecorder')
 
-module.exports = async function generate(campaignId, largeDonationThreshold, contactMethod) {
+module.exports = async function generate(campaignId, contactMethod) {
 
     // Build the SQL
-    var sql = buildSQL(campaignId, largeDonationThreshold, contactMethod)
+    var sql = buildSQL(campaignId, contactMethod)
     
     // For debugging
     //console.log(sql)
@@ -36,14 +36,12 @@ module.exports = async function generate(campaignId, largeDonationThreshold, con
         }
         return report
     } catch(e) {
-        ErrorRecorder.recordAppError(new AppError('data-server', 'LargeDonationDonors.js', 'LargeDonationDonors', `Database error generating Large Donation Donors report: ${sql}`, e))
+        ErrorRecorder.recordAppError(new AppError('data-server', 'RecurringDonations.js', 'RecurringDonations', `Database error generating Recurring Donations report: ${sql}`, e))
         throw new Error(e.message)
     }
 }
 
-function buildSQL(campaignId, largeDonationThreshold, contactMethod) {
-
-    const threshold = (largeDonationThreshold === undefined) ? 2900.00 : parseFloat(largeDonationThreshold)
+function buildSQL(campaignId, contactMethod) {
 
     var sql = `SELECT p.first_name, p.middle_name, p.last_name, p.suffix, donations.amount\r\n`
     sql += `FROM (\r\n`
@@ -72,11 +70,12 @@ function buildSQL(campaignId, largeDonationThreshold, contactMethod) {
             sql += `        AND cm.description ILIKE 'Text'\r\n`
         }
     }
+    sql += `        AND (cal.detail ->> 'recurring') IS NOT NULL\r\n`
+    sql += `        AND UPPER(cal.detail ->> 'recurring') = 'TRUE'\r\n`
     sql += `        AND cal.detail ->> 'personId' <> '{}'\r\n`
     sql += `        GROUP BY person_id\r\n`
     sql += `        ) donations\r\n`
     sql += `INNER JOIN base.person p ON p.person_id = donations.person_id\r\n`
-    sql += `WHERE donations.amount > ${threshold}\r\n`
     sql += `;`
 
     return sql

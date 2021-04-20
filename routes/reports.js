@@ -291,6 +291,46 @@ router.get('/LargeDonationDonors', utils.authenticateToken, async(req, res) => {
 
 //====================================================================================
 //
+// Recurring Donations report
+//
+// Returns the list of donations that are marked as "recurring"
+// 
+//====================================================================================
+router.get('/RecurringDonations', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /RecurringDonations', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/RecurringDonations')
+            return res.status(200).send( await report(actor.campaignId, req.query.contactMethod) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Recurring Donations report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /RecurringDonations', 'Unknown error in GET /RecurringDonations', e))
+        throw e
+    }
+});
+
+//====================================================================================
+//
 // Donations by Race report
 //
 // Returns donation information categorized by race. Informatiom includes
