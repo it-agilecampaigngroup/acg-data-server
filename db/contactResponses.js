@@ -65,9 +65,19 @@ async function processContactRespondedResponse(response) {
             switch(response.contactReason.toUpperCase()) {
                 
                 case "DONATION REQUEST": 
+                    // Determine the appropriate interval for "donation allowed" date
+                    var interval = "NOW() + INTERVAL '6 months'" // This is the default interval
+                    
+                    if( response.detail.recurring !== undefined ) {
+                        if( response.detail.recurring === true ) {
+                        // If the donation is recurring set the interval way out
+                        interval = "NOW() + INTERVAL '4 years'" 
+                        }
+                    }
+
                     // Update the existing status record
                     sql = "UPDATE base.contact_status\r\n"
-                    sql += `SET donation_request_allowed_date = NOW() + INTERVAL '6 months'\r\n`
+                    sql += `SET donation_request_allowed_date = ${interval}\r\n`
                     sql += `, persuasion_attempt_allowed_date = NOW() + INTERVAL '2 weeks'\r\n`
                     sql += `, modified_by = '${response.actor.username}'\r\n`
                     sql += `, date_modified = NOW()\r\n`
