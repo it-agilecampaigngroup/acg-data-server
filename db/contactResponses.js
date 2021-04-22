@@ -65,13 +65,14 @@ async function processContactRespondedResponse(response) {
             switch(response.contactReason.toUpperCase()) {
                 
                 case "DONATION REQUEST": 
-                    // Determine the appropriate interval for "donation allowed" date
+                    // Determine the appropriate interval for "donation request allowed" date
                     var interval = "NOW() + INTERVAL '6 months'" // This is the default interval
-                    
-                    if( response.detail.recurring !== undefined ) {
-                        if( response.detail.recurring === true ) {
-                        // If the donation is recurring set the interval way out
-                        interval = "NOW() + INTERVAL '4 years'" 
+                    if( response.contactResult.toUpperCase() == "POSITIVE RESPONSE") {
+                        if( response.detail.recurring !== undefined ) {
+                            if( response.detail.recurring === true ) {
+                            // If the donation is recurring set the interval way out
+                            interval = "NOW() + INTERVAL '4 years'" 
+                            }
                         }
                     }
 
@@ -79,6 +80,9 @@ async function processContactRespondedResponse(response) {
                     sql = "UPDATE base.contact_status\r\n"
                     sql += `SET donation_request_allowed_date = ${interval}\r\n`
                     sql += `, persuasion_attempt_allowed_date = NOW() + INTERVAL '2 weeks'\r\n`
+                    // Reset callback fields
+                    sql += `, callback_timestamp = NULL\r\n`
+                    sql += `, callback_actor_id = NULL\r\n`
                     sql += `, modified_by = '${response.actor.username}'\r\n`
                     sql += `, date_modified = NOW()\r\n`
                     sql += `WHERE person_id = ${response.detail.personId};`
@@ -91,6 +95,9 @@ async function processContactRespondedResponse(response) {
                     sql = "UPDATE base.contact_status\r\n"
                     sql += `SET donation_request_allowed_date = NOW() + INTERVAL '7 days'\r\n`
                     sql += `, persuasion_attempt_allowed_date = NOW() + INTERVAL '7 days'\r\n`
+                    // Reset callback fields
+                    sql += `, callback_timestamp = NULL\r\n`
+                    sql += `, callback_actor_id = NULL\r\n`
                     sql += `, modified_by = '${response.actor.username}'\r\n`
                     sql += `, date_modified = NOW()\r\n`
                     sql += `WHERE person_id = ${response.detail.personId};`
@@ -108,7 +115,17 @@ async function processContactRespondedResponse(response) {
                     throw e
             }
             break;
-
+        case "CALLBACK SCHEDULED":
+            // Update the existing status record
+            sql = "UPDATE base.contact_status\r\n"
+            sql += `SET callback_timestamp = TO_TIMESTAMP(${response.detail.callbackTimeStamp}, 'mm/dd/yyyy HH:MI:SS')\r\n`
+            sql += `, callback_actor_id = ${response.detail.callbackActorId}\r\n`
+            sql += `, modified_by = '${response.actor.username}'\r\n`
+            sql += `, date_modified = NOW()\r\n`
+            sql += `WHERE person_id = ${response.detail.personId};`
+            executeSQL(sql)
+            break;
+            
         default:
             let msg = `Error processing contact response: Result '${response.contactResult}' is not a valid contact result`
             let e = new Error(msg)
@@ -255,7 +272,7 @@ async function processContactRejectedResponse(response) {
     switch(response.contactResult.toUpperCase()) {
 
         case "CONFLICT OF INTEREST":
-            // TODO: Set lease_time to NULL in contact_status 
+            // Set lease_time to NULL in contact_status 
             // so contact will be contacted again (by some other
             // actor, hopefully).
             sql = "UPDATE base.contact_status\r\n"
@@ -266,9 +283,20 @@ async function processContactRejectedResponse(response) {
             executeSQL(sql)
             break;
 
+        case "CALLBACK CANCELLED":
+            // Cancel the callback chain
+            sql = "UPDATE base.contact_status\r\n"
+            sql += `SET callback_timestamp = NULL\r\n`
+            sql += `, callback_actor_id = NULL\r\n`
+            sql += `, modified_by = '${response.actor.username}'\r\n`
+            sql += `, date_modified = NOW()\r\n`
+            sql += `WHERE person_id = ${response.detail.personId};`
+            executeSQL(sql)
+            break;
+
         case "CONTACT IS ELECTED OFFICIAL":
         case "OTHER":
-            // TODO: Set review_required and review_required_note in
+            // Set review_required and review_required_note in
             // contact_status table so that the person is not contacted
             // until their status has been reviewed and modified.
             sql = "UPDATE base.contact_status\r\n"
