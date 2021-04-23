@@ -31,7 +31,12 @@ const runConsumer = async () => {
         throw new Error(e.message)
     }
 }
-runConsumer()
+try {
+    runConsumer()
+} catch(e) {
+
+}
+
 
 //===============================================
 // Message processors
@@ -175,7 +180,7 @@ runConsumer()
                     break
                 case "CALLBACK SCHEDULED":
                     sql = "UPDATE base.contact_status\r\n"
-                    sql += `SET callback_timestamp = TO_TIMESTAMP(${msg.detail.callbackTimeStamp}, 'mm/dd/yyyy HH:MI:SS')\r\n`
+                    sql += `SET callback_timestamp = '${new Date(msg.detail.callbackTimestamp).toISOString()}'\r\n`
                     sql += `, callback_actor_id = ${msg.detail.callbackActorId}\r\n`
                     sql += `, modified_by = 'system'\r\n`
                     sql += `, date_modified = NOW()\r\n`

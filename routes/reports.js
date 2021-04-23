@@ -622,4 +622,44 @@ router.get('/PersonContactHistory', utils.authenticateToken, async(req, res) => 
     }
 });
 
+//====================================================================================
+//
+// Actor Callback List report
+//
+// Returns an actor's list of scheduled callbacks
+// 
+//====================================================================================
+router.get('/ActorCallbackList', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /ActorCallbackList', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/ActorCallbackList')
+            return res.status(200).send( await report(actor.actorId) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Actor Callback List report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /ActorCallbackList', 'Unknown error in GET /ActorCallbackList', e))
+        throw e
+    }
+});
+
 module.exports = router

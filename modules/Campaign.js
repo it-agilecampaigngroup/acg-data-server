@@ -87,6 +87,21 @@ module.exports = {
         })
     }, 
 
+    async getManagedActors(managerId, next) {
+        await axios
+        .get(`http://acglogic.com/sapi/reports/ManagedActorList?campaignId=${this.campaignId}&managerId=${managerId}`, {
+            headers: {
+                'Authorization': `Bearer ${await token()}`
+            }
+        })
+        .then(res => {
+            next(res.data)
+        })
+        .catch(e => {
+            throw e
+        })
+    }, 
+
     //=========================================================
     // Retrieves and actor's id based on their username
     //
