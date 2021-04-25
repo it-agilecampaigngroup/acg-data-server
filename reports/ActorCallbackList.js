@@ -59,6 +59,9 @@ module.exports = async function generate(actorId) {
                         , contactMethod: row.contact_method
                         , callbackActor: actor.displayName
                         , callbackActorId: row.callback_actor_id
+                        , personId: row.person_id
+                        , precinct: row.precinct_name
+                        , note: row.callback_note
                     }
                 )
             }
@@ -102,6 +105,9 @@ async function buildSQL(actorId) {
     sql += `, reas.description contact_reason\r\n`
     sql += `, meth.description contact_method\r\n`
     sql += `, stat.callback_actor_id\r\n`
+    sql += `, p.person_id\r\n`
+    sql += `, prec.name precinct_name\r\n`
+    sql += `, clog.detail ->> 'note' callback_note\r\n`
     sql += `FROM base.contact_status stat\r\n`
     sql += `INNER JOIN base.person p ON p.person_id = stat.person_id\r\n`
     sql += `LEFT OUTER JOIN base.person_phone phon ON phon.person_id = p.person_id AND phon.is_primary = true\r\n`
@@ -113,6 +119,7 @@ async function buildSQL(actorId) {
     sql += `INNER JOIN base.contact_reason reas ON reas.reason_id = clog.contact_reason_id\r\n`
     sql += `INNER JOIN base.contact_method meth ON meth.method_id = clog.contact_method_id\r\n`
     sql += `INNER JOIN base.contact_result res ON res.result_id = clog.contact_result_id\r\n`
+    sql += `LEFT OUTER JOIN election.precinct prec ON prec.precinct_id = addr.precinct_id\r\n`
     sql += `WHERE stat.callback_actor_id IN (${actorIdList})\r\n`
     sql += `AND stat.callback_timestamp IS NOT NULL\r\n`
     sql += `AND clog.detail ->> 'personId' <> '{}'\r\n`
@@ -124,6 +131,9 @@ async function buildSQL(actorId) {
     sql += `, reas.description\r\n`
     sql += `, meth.description\r\n`
     sql += `, stat.callback_actor_id\r\n`
+    sql += `, p.person_id\r\n`
+    sql += `, prec.name\r\n`
+    sql += `, clog.detail ->> 'note'\r\n`
     sql += `ORDER BY stat.callback_timestamp;\r\n`
    
     return sql

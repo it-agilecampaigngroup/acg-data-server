@@ -118,7 +118,6 @@ async function processContactRespondedResponse(response) {
         case "CALLBACK SCHEDULED":
             // Update the existing status record
             sql = "UPDATE base.contact_status\r\n"
-            //sql += `SET callback_timestamp = TO_TIMESTAMP('${response.detail.callbackTimestamp}', 'mm/dd/yyyy hh24:mi:ss') at time zone (SELECT current_setting('timezone'))\r\n`
             sql += `SET callback_timestamp = '${new Date(response.detail.callbackTimestamp).toISOString()}'\r\n`
             sql += `, callback_actor_id = ${response.detail.callbackActorId}\r\n`
             sql += `, modified_by = '${response.actor.username}'\r\n`
