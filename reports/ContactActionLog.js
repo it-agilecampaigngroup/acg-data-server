@@ -61,7 +61,7 @@ module.exports = async function generate(campaignId, actorId, dateStart, dateEnd
         }
         return undefined
     } catch(e) {
-        ErrorRecorder.recordAppError(new AppError('data-server', 'SupportResultSummary.js', 'SupportResultSummary', `Database error generating Support Result Summary report: ${sql}`, e))
+        ErrorRecorder.recordAppError(new AppError('data-server', 'ContactActionLog.js', 'ContactActionLog', `Database error generating Contact Action Log report: ${sql}`, e))
         throw new Error(e.message)
     }
 }

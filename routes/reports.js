@@ -544,7 +544,6 @@ router.get('/ContactActionLog', utils.authenticateToken, async(req, res) => {
         // is not for a specific actor or it's for some other actor
         var targetActorId = (req.query.actorId === undefined ) ? 0 : parseInt(req.query.actorId)
         if( actor.isCampaignMgr === false ) {
-            console.log('Not Mgr')
             if( targetActorId !== actor.actorId ) {
                return res.status(401).send("Forbidden: You must be a Campaign Manager to run this report for the campaign or another actor")
             }
@@ -575,6 +574,124 @@ router.get('/ContactActionLog', utils.authenticateToken, async(req, res) => {
 
     } catch(e) {
         ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /ContactActionLog', 'Unknown error in GET /ContactActionLog', e))
+        throw e
+    }
+});
+
+//====================================================================================
+//
+// Contact Response List report
+//
+// Returns or emails a report detailing contacts' responses
+// 
+//====================================================================================
+router.get('/ContactResponseList', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /ContactResponseList', 'Unknown error in GET /', e))
+            throw e
+        })
+        
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // The requesting actor must be a Campaign Manager if the report
+        // is not for a specific actor or it's for some other actor
+        var targetActorId = (req.query.actorId === undefined ) ? 0 : parseInt(req.query.actorId)
+        if( actor.isCampaignMgr === false ) {
+            if( targetActorId !== actor.actorId ) {
+               return res.status(401).send("Forbidden: You must be a Campaign Manager to run this report for the campaign or another actor")
+            }
+        }
+
+        // Prepare the arguments
+        var campaignId = parseInt(req.query.campaignId)
+        if( isNaN(campaignId) ) {
+            if( targetActorId != 0) {
+                var targetActor = await getActor(targetActorId)
+                campaignId = targetActor.campaignId
+            } else {
+                campaignId = actor.campaignId
+            }
+        }
+        var dateStart = (req.query.dateStart === undefined) ? new Date("1/1/2021") : req.query.dateStart
+        dateStart = new Date(dateStart).toLocaleDateString()
+        var dateEnd = (req.query.dateEnd === undefined) ? new Date() : req.query.dateEnd
+        dateEnd = new Date(dateEnd).toLocaleDateString()
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/ContactResponseList')
+            const json = await report(campaignId, targetActorId, dateStart, dateEnd)
+            if( req.query.email === undefined ) {
+                // If no email address was specified then just return the JSON
+                return res.status(200).send( json )
+            } else {
+                // Convert the JSON to CSV and email it
+                const { parseAsync } = require('json2csv');
+
+                const fields = [
+                    { label: 'Date', value: 'date' }
+                    ,{ label: 'Time', value: 'time' } 
+                    , { label: 'Actor', value: 'actor' }
+                    , { label: 'Contact Reason', value: 'contactReason' }
+                    , { label: 'Contact Method', value: 'contactMethod' }
+                    , { label: 'Call Result', value: 'contactResult' }
+                    , { label: 'Voter Id', value: 'voterId' }
+                    , { label: 'First Name', value:  'firstName' }
+                    , { label: 'Last Name', value:  'lastName' }
+                    , { label: 'Street', value:  'street' }
+                    , { label: 'City', value:  'city' }
+                    , { label: 'State', value:  'state' }
+                    , { label: 'Zip', value:  'zip' }
+                    , { label: 'Email', value:  'email' }
+                    , { label: 'Phone Number', value:  'phoneNumber' }
+                    , { label: 'Donation Amount', value:  'donationAmount' }
+                    , { label: 'Donation Is Recurring', value:  'donationIsRecurring' }
+                    , { label: 'Callback Date', value:  'callbackDate' }
+                    , { label: 'Callback Time', value:  'callbackTime' }
+                    , { label: 'Support Result', value:  'supportResult' }
+                    , { label: 'Value Result', value:  'valueResult' }
+                    , { label: 'Note', value:  'note' }
+                ]
+                const opts = { fields };
+                
+                parseAsync(json, opts)
+                  .then(csv => {
+                    // Email the CSV
+                    const emailer = require ('../messaging/emailer')
+                    const email = new emailer.Email(
+                        'donotreply@acglogic.com'
+                        , req.query.email
+                        , 'Contact Response List'
+                        , 'Contact Response List email test'
+                        , undefined
+                        , [{filename: 'ContactResponseList.csv', content: csv}]
+                        )
+                    emailer.sendEmail(email)
+                    return res.status(200).send( `Contact Response List emailed to ${req.query.email}` )
+                  })
+                  .catch(e => {
+                    ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /ContactResponseList', 'Error sending email in GET /ContactResponseList', e))
+                    return res.status(400).send(`Error emailing Contact Response List report: ${e.message}`)
+                  });                
+            }
+            
+        } catch (e) {
+            return res.status(400).send(`Error generating Contact Response List report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /ContactResponseList', 'Unknown error in GET /ContactResponseList', e))
         throw e
     }
 });

@@ -6,7 +6,7 @@ class Contact {
         , phones = [], addresses = []
         , leaseTime, lastContactAttemptTime, donationRequestAllowedDate
         , persuasionAttemptAllowedDate, turnoutRequestAllowedDate
-        , donation, email, personId, isVirtual
+        , donation, email, personId, isVirtual, precinctName
     ) {
         this.firstName = firstName
         this.lastName = lastName
@@ -25,6 +25,7 @@ class Contact {
         this.email = [{address: 'someguy@dummymail.com'}]
         this.personId = personId
         this.isVirtual = isVirtual
+        this.precinctName = precinctName
     }
 }
 

@@ -222,7 +222,7 @@ function buildContactRequestSelect(contactReason, contactMethod) {
         case "TURNOUT":
             switch(contactMethod.toLowerCase()) {
                 case "phone call":
-                    select += "FROM base.v_turnout_requst_phone_contact\r\n"
+                    select += "FROM base.v_turnout_request_phone_contact\r\n"
                     break;
                 case "canvass":
                     break;
@@ -232,7 +232,7 @@ function buildContactRequestSelect(contactReason, contactMethod) {
         default:
             break;
     }
-    // Finally, add a limit of one record
+    // Finally, add a limit of one record because we only need one
     select += "LIMIT 1;"
 
     return select;

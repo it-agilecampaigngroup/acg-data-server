@@ -54,6 +54,7 @@ module.exports = async function generate(actorId) {
                         , callbackPhoneType: row.phone_type
                         , callbackStreet: row.number + " " + row.street_name
                         , callbackUnit: row.unit_number + " " + row.unit_type
+                        , email: []
                         , scheduledDate: new Date(row.contact_date).toLocaleDateString()
                         , contactReason: row.contact_reason
                         , contactMethod: row.contact_method
@@ -61,7 +62,14 @@ module.exports = async function generate(actorId) {
                         , callbackActorId: row.callback_actor_id
                         , personId: row.person_id
                         , precinct: row.precinct_name
+                        , districts: [
+                            {type: "Congressional District", name:row.congressional_district}
+                            , {type: "State House District", name:row.state_house_district}
+                            , {type: "State Senate District", name:row.state_senate_district}
+                        ]
                         , note: row.callback_note
+                        , lastDonationAmount: parseFloat(row.last_donation)
+                        , recommendedDonationAmount: parseFloat(row.recommended_donation)
                     }
                 )
             }
@@ -107,7 +115,12 @@ async function buildSQL(actorId) {
     sql += `, stat.callback_actor_id\r\n`
     sql += `, p.person_id\r\n`
     sql += `, prec.name precinct_name\r\n`
+    sql += `, cong_dist.name congressional_district\r\n`
+    sql += `, house_dist.name state_house_district\r\n`
+    sql += `, senate_dist.name state_senate_district\r\n`
     sql += `, clog.detail ->> 'note' callback_note\r\n`
+    sql += `, ds.avg_donations recommended_donation\r\n`
+    sql += `, ds.last_donation_amt\r\n`
     sql += `FROM base.contact_status stat\r\n`
     sql += `INNER JOIN base.person p ON p.person_id = stat.person_id\r\n`
     sql += `LEFT OUTER JOIN base.person_phone phon ON phon.person_id = p.person_id AND phon.is_primary = true\r\n`
@@ -119,7 +132,12 @@ async function buildSQL(actorId) {
     sql += `INNER JOIN base.contact_reason reas ON reas.reason_id = clog.contact_reason_id\r\n`
     sql += `INNER JOIN base.contact_method meth ON meth.method_id = clog.contact_method_id\r\n`
     sql += `INNER JOIN base.contact_result res ON res.result_id = clog.contact_result_id\r\n`
+    sql += `LEFT OUTER JOIN election.voter v ON v.person_id = p.person_id\r\n`
+    sql += `LEFT OUTER JOIN election.district cong_dist ON cong_dist.district_id = v.congressional_district_id\r\n`
+    sql += `LEFT OUTER JOIN election.district house_dist ON house_dist.district_id = v.state_house_district_id\r\n`
+    sql += `LEFT OUTER JOIN election.district senate_dist ON senate_dist.district_id = v.state_senate_district_id\r\n`
     sql += `LEFT OUTER JOIN election.precinct prec ON prec.precinct_id = addr.precinct_id\r\n`
+    sql += `LEFT OUTER JOIN base.donation_summary ds ON ds.person_id = p.person_id\r\n`
     sql += `WHERE stat.callback_actor_id IN (${actorIdList})\r\n`
     sql += `AND stat.callback_timestamp IS NOT NULL\r\n`
     sql += `AND clog.detail ->> 'personId' <> '{}'\r\n`
@@ -133,7 +151,12 @@ async function buildSQL(actorId) {
     sql += `, stat.callback_actor_id\r\n`
     sql += `, p.person_id\r\n`
     sql += `, prec.name\r\n`
+    sql += `, cong_dist.name\r\n`
+    sql += `, house_dist.name\r\n`
+    sql += `, senate_dist.name\r\n`
     sql += `, clog.detail ->> 'note'\r\n`
+    sql += `, ds.avg_donations\r\n`
+    sql += `, ds.last_donation_amt\r\n`
     sql += `ORDER BY stat.callback_timestamp;\r\n`
    
     return sql
