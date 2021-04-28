@@ -3,7 +3,7 @@
 class Contact {
     constructor(
         firstName, lastName, middleName, namePrefix, nameSuffix, rating
-        , phones = [], addresses = []
+        , phones = [], addresses = [], donationSummary, districts
         , leaseTime, lastContactAttemptTime, donationRequestAllowedDate
         , persuasionAttemptAllowedDate, turnoutRequestAllowedDate
         , donation, email, personId, isVirtual, precinctName
@@ -16,6 +16,8 @@ class Contact {
         this.rating = rating
         this.phones = phones
         this.addresses = addresses
+        this.donationSummary = donationSummary
+        this.districts = districts
         this.leaseTime = leaseTime
         this.lastContactAttemptTime = lastContactAttemptTime
         this.donationRequestAllowedDate = donationRequestAllowedDate

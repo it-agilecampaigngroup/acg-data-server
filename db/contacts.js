@@ -90,6 +90,17 @@ module.exports = {
             const dbres = await db.query(select)
             if( dbres.rowCount == 1) {
                 const row = dbres.rows[0]
+                //Populate the donation summary if no info
+                // was returned by the query
+                var donationSummary = row.donation_summary
+                if( donationSummary === null) {
+                    donationSummary = {
+                        lastDonationAmount: 0
+                        , recommendedAsk: 500.00
+                    }
+                }
+
+                //Create and return the contact
                 return new Contact(
                 row.first_name
                 , row.last_name
@@ -99,6 +110,8 @@ module.exports = {
                 , row.rating
                 , translatePhones(row.phones)
                 , translateAddresses(row.addresses)
+                , donationSummary
+                , row.districts
                 , row.lease_time
                 , row.last_contact_attempt_time
                 , row.donation_request_allowed_date
@@ -195,7 +208,9 @@ function buildContactRequestSelect(contactReason, contactMethod) {
     select += ", donation_request_allowed_date\r\n"
     select += ", persuasion_attempt_allowed_date\r\n"
     select += ", turnout_request_allowed_date\r\n"
-    select += ", person_id, is_virtual\r\n"
+    select += ", person_id, is_virtual, donation_summary\r\n"
+    select += ", districts\r\n"
+
     switch(contactReason.toUpperCase()) {
         case "DONATION REQUEST":
             switch(contactMethod.toLowerCase()) {
