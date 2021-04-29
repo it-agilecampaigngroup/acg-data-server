@@ -516,6 +516,70 @@ router.get('/DonationCallsToDate', utils.authenticateToken, async(req, res) => {
 });
 
 //====================================================================================
+//
+// DonationPledgeList report
+//
+// Returns the list of contacts that have pledged a donation
+// 
+//====================================================================================
+router.get('/DonationPledgeList', utils.authenticateToken, async(req, res) => {
+
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationPledgeList', 'Unknown error in GET /', e))
+            throw e
+        })
+
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // The requesting actor must be a Campaign Manager if the report
+        // is not for a specific actor or it's for some other actor
+        var targetActorId = (req.query.actorId === undefined ) ? 0 : parseInt(req.query.actorId)
+        if( actor.isCampaignMgr === false ) {
+            if( targetActorId !== actor.actorId ) {
+               return res.status(401).send("Forbidden: You must be a Campaign Manager to run this report for the campaign or another actor")
+            }
+        }
+
+        // Prepare the arguments
+        var campaignId = parseInt(req.query.campaignId)
+        if( isNaN(campaignId) ) {
+            if( targetActorId != 0) {
+                var targetActor = await getActor(targetActorId)
+                campaignId = targetActor.campaignId
+            } else {
+                campaignId = actor.campaignId
+            }
+        }
+        var dateStart = (req.query.dateStart === undefined) ? new Date("1/1/2021") : req.query.dateStart
+        dateStart = new Date(dateStart).toLocaleDateString()
+        var dateEnd = (req.query.dateEnd === undefined) ? new Date() : req.query.dateEnd
+        dateEnd = new Date(dateEnd).toLocaleDateString()
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/DonationPledgeList')
+            return res.status(200).send( await report(campaignId, targetActorId, dateStart, dateEnd) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Donation Pledge List report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /DonationPledgeList', 'Unknown error in GET /DonationPledgeList', e))
+        throw e
+    }
+});
+
+//====================================================================================
 // Contact Action Log report
 //
 // Returns the Contact Action Logs for and actor or a campaign
