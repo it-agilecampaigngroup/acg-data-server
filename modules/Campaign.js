@@ -74,7 +74,7 @@ module.exports = {
 
     async getActor(actorId, next) {
         await axios
-        .get(`https://acglogic.com/sapi/actors/${actorId}`, {
+        .get(`https://vanguardcontact.com/sapi/actors/${actorId}`, {
             headers: {
                 'Authorization': `Bearer ${await token()}`
             }
@@ -89,7 +89,7 @@ module.exports = {
 
     async getManagedActors(managerId, next) {
         await axios
-        .get(`http://acglogic.com/sapi/reports/ManagedActorList?campaignId=${this.campaignId}&managerId=${managerId}`, {
+        .get(`http://vanguardcontact.com/sapi/reports/ManagedActorList?campaignId=${this.campaignId}&managerId=${managerId}`, {
             headers: {
                 'Authorization': `Bearer ${await token()}`
             }
@@ -148,7 +148,7 @@ module.exports = {
 async function getCampaign(campaignId) {
    
     await axios
-    .get(`https://acglogic.com/sapi/campaigns/${campaignId}`, {
+    .get(`https://vanguardcontact.com/sapi/campaigns/${campaignId}`, {
         headers: {
             'Authorization': `Bearer ${await token()}`
         }

@@ -13,7 +13,6 @@ const dbContacts = require('../db/contacts')
 //====================================================================================
 router.get('/', utils.authenticateToken, async(req, res) => {
 //router.get('/', async(req, res) => {  
-
     try {
         // Get the actor making the request
         var actor
