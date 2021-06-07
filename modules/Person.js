@@ -4,9 +4,9 @@ class Person {
     constructor(firstName, lastName, middleName, namePrefix, nameSuffix, address = null, phones = []) {
         this.firstName = firstName
         this.lastName = lastName
-        this.middleName = middleName
-        this.prefix = namePrefix
-        this.suffix = nameSuffix
+        this.middleName = (middleName == undefined) ? "" : middleName
+        this.prefix = (namePrefix == undefined) ? "" : namePrefix
+        this.suffix = (nameSuffix == undefined) ? "" : nameSuffix
         this.address = address
         this.phones = phones
     }

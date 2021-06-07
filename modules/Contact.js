@@ -11,8 +11,8 @@ class Contact {
         this.firstName = firstName
         this.lastName = lastName
         this.middleName = middleName
-        this.namePrefix = namePrefix
-        this.nameSuffix = nameSuffix
+        this.namePrefix = (namePrefix == undefined) ? "" : namePrefix
+        this.nameSuffix = (nameSuffix == undefined) ? "" : nameSuffix
         this.rating = rating
         this.phones = phones
         this.addresses = addresses
