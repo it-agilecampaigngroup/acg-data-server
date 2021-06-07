@@ -93,7 +93,7 @@ function buildSQL(campaignId, actorId, dateStart, dateEnd) {
     sql += `, vcal.detail->>'phone' phone_number\r\n`
     sql += `, vcal.actor_id\r\n`
     sql += `, CAST(vcal.detail->>'amount' as decimal) donation_amount\r\n`
-    sql += `, COALESCE((SELECT ds.num_donations FROM base.donation_summary ds WHERE ds.person_id = p.person_id), 0) num_donations_reported\r\n`
+    sql += `, COALESCE((SELECT SUM(ds.num_donations) FROM base.donation_summary ds WHERE ds.person_id = p.person_id), 0) num_donations_reported\r\n`
     sql += `, CAST(COALESCE(vcal.detail->>'recurring', 'false') AS boolean) is_recurring\r\n`
     sql += `, CASE WHEN CAST(vcal.detail->>'amount' as decimal) >= 2900 THEN true ELSE false END is_maximum_allowed\r\n`
     sql += `, COALESCE(vcal.detail->>'note', '') note\r\n`
