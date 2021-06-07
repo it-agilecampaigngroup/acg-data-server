@@ -8,9 +8,9 @@ class Contact {
         , persuasionAttemptAllowedDate, turnoutRequestAllowedDate
         , donation, email, personId, isVirtual, precinctName
     ) {
-        this.firstName = firstName
-        this.lastName = lastName
-        this.middleName = middleName
+        this.firstName = (firstName == undefined) ? "" : firstName
+        this.lastName = (lastName == undefined) ? "" : lastName
+        this.middleName = (middleName == undefined) ? "" : middleName
         this.namePrefix = (namePrefix == undefined) ? "" : namePrefix
         this.nameSuffix = (nameSuffix == undefined) ? "" : nameSuffix
         this.rating = rating
