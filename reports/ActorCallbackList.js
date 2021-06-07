@@ -105,7 +105,13 @@ async function buildSQL(actorId) {
     }
 
     // Build and return the query
-    var sql = `SELECT stat.callback_timestamp\r\n`
+
+    var sql = `WITH latest_donation (person_id, last_donation_date ) AS (\r\n`
+    sql += `    SELECT person_id, MAX(last_donation_date) last_donation_date\r\n`
+    sql += `    FROM base.donation_summary\r\n`
+    sql += `    GROUP BY person_id\r\n`
+    sql += `)\r\n`
+    sql += `SELECT stat.callback_timestamp\r\n`
     sql += `, p.first_name, p.middle_name, p.last_name, p.suffix\r\n`
     sql += `, phon.phone_number, pt.description phone_type\r\n`
     sql += `, addr."number", addr.street_name, addr.unit_number, addr.unit_type\r\n`
@@ -119,8 +125,8 @@ async function buildSQL(actorId) {
     sql += `, house_dist.name state_house_district\r\n`
     sql += `, senate_dist.name state_senate_district\r\n`
     sql += `, clog.detail ->> 'note' callback_note\r\n`
-    sql += `, ds.avg_donations recommended_donation\r\n`
-    sql += `, ds.last_donation_amt\r\n`
+    sql += `, AVG(ds.avg_donations) recommended_donation\r\n`
+    sql += `, (SELECT last_donation_amt FROM base.donation_summary WHERE person_id = p.person_id AND last_donation_date = ld.last_donation_date) last_donation_amt\r\n`
     sql += `FROM base.contact_status stat\r\n`
     sql += `INNER JOIN base.person p ON p.person_id = stat.person_id\r\n`
     sql += `LEFT OUTER JOIN base.person_phone phon ON phon.person_id = p.person_id AND phon.is_primary = true\r\n`
@@ -138,6 +144,7 @@ async function buildSQL(actorId) {
     sql += `LEFT OUTER JOIN election.district senate_dist ON senate_dist.district_id = v.state_senate_district_id\r\n`
     sql += `LEFT OUTER JOIN election.precinct prec ON prec.precinct_id = addr.precinct_id\r\n`
     sql += `LEFT OUTER JOIN base.donation_summary ds ON ds.person_id = p.person_id\r\n`
+    sql += `LEFT OUTER JOIN latest_donation ld ON ld.person_id = p.person_id\r\n`
     sql += `WHERE stat.callback_actor_id IN (${actorIdList})\r\n`
     sql += `AND stat.callback_timestamp IS NOT NULL\r\n`
     sql += `AND clog.detail ->> 'personId' <> '{}'\r\n`
@@ -155,8 +162,7 @@ async function buildSQL(actorId) {
     sql += `, house_dist.name\r\n`
     sql += `, senate_dist.name\r\n`
     sql += `, clog.detail ->> 'note'\r\n`
-    sql += `, ds.avg_donations\r\n`
-    sql += `, ds.last_donation_amt\r\n`
+    sql += `, ld.last_donation_date\r\n`
     sql += `ORDER BY stat.callback_timestamp;\r\n`
    
     return sql
