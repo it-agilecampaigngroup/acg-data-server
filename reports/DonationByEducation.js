@@ -73,8 +73,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `, SUM(d.yes_count) yes_count\r\n`
     sql += `, SUM(d.no_count) no_count\r\n`
     sql += `, SUM(d.response_count) response_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.yes_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.no_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) no_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.yes_count) + SUM(d.no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.yes_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) ))\r\n`
+    sql += `  ELSE 0 END yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.yes_count) + SUM(d.no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.no_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) ))\r\n`
+    sql += `  ELSE 0 END no_perc\r\n`
 
     sql += `-- HS and under\r\n`
     sql += `, ROUND(SUM(d.hs_and_under_amount), 2) hs_and_under_amount\r\n`
@@ -84,8 +90,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END hs_and_under_average\r\n`
     sql += `, ROUND(SUM(d.hs_and_under_yes_count), 2) hs_and_under_yes_count\r\n`
     sql += `, ROUND(SUM(d.hs_and_under_no_count), 2) hs_and_under_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.hs_and_under_yes_count) AS decimal)) / ( SUM(d.hs_and_under_yes_count) + SUM(d.hs_and_under_no_count) )) hs_and_under_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.hs_and_under_no_count) AS decimal)) / ( SUM(d.hs_and_under_yes_count) + SUM(d.hs_and_under_no_count) )) hs_and_under_no_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.hs_and_under_yes_count) + SUM(d.hs_and_under_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.hs_and_under_yes_count) AS decimal)) / ( SUM(d.hs_and_under_yes_count) + SUM(d.hs_and_under_no_count) ))\r\n`
+    sql += `  ELSE 0 END hs_and_under_yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.hs_and_under_yes_count) + SUM(d.hs_and_under_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.hs_and_under_no_count) AS decimal)) / ( SUM(d.hs_and_under_yes_count) + SUM(d.hs_and_under_no_count) ))\r\n`
+    sql += `  ELSE 0 END hs_and_under_no_perc\r\n`
 
     sql += `-- Some college\r\n`
     sql += `, ROUND(SUM(d.some_college_amount), 2) some_college_amount\r\n`
@@ -95,8 +107,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END some_college_average\r\n`
     sql += `, ROUND(SUM(d.some_college_yes_count), 2) some_college_yes_count\r\n`
     sql += `, ROUND(SUM(d.some_college_no_count), 2) some_college_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.some_college_yes_count) AS decimal)) / ( SUM(d.some_college_yes_count) + SUM(d.some_college_no_count) )) some_college_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.some_college_no_count) AS decimal)) / ( SUM(d.some_college_yes_count) + SUM(d.some_college_no_count) )) some_college_no_perc\r\n`
+    
+    sql += `, CASE WHEN SUM(d.some_college_yes_count) + SUM(d.some_college_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.some_college_yes_count) AS decimal)) / ( SUM(d.some_college_yes_count) + SUM(d.some_college_no_count) ))\r\n`
+    sql += `  ELSE 0 END some_college_yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.some_college_yes_count) + SUM(d.some_college_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.some_college_no_count) AS decimal)) / ( SUM(d.some_college_yes_count) + SUM(d.some_college_no_count) ))\r\n`
+    sql += `  ELSE 0 END some_college_no_perc\r\n`
 
     sql += `-- BA\r\n`
     sql += `, ROUND(SUM(d.ba_amount), 2) ba_amount\r\n`
@@ -106,8 +124,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END ba_average\r\n`
     sql += `, ROUND(SUM(d.ba_yes_count), 2) ba_yes_count\r\n`
     sql += `, ROUND(SUM(d.ba_no_count), 2) ba_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.ba_yes_count) AS decimal)) / ( SUM(d.ba_yes_count) + SUM(d.ba_no_count) )) ba_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.ba_no_count) AS decimal)) / ( SUM(d.ba_yes_count) + SUM(d.ba_no_count) )) ba_no_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.ba_yes_count) + SUM(d.ba_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.ba_yes_count) AS decimal)) / ( SUM(d.ba_yes_count) + SUM(d.ba_no_count) ))\r\n`
+    sql += `  ELSE 0 END ba_yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.ba_yes_count) + SUM(d.ba_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.ba_no_count) AS decimal)) / ( SUM(d.ba_yes_count) + SUM(d.ba_no_count) ))\r\n`
+    sql += `  ELSE 0 END ba_no_perc\r\n`
 
     sql += `-- MA plus\r\n`
     sql += `, ROUND(SUM(d.ma_plus_amount), 2) ma_plus_amount\r\n`
@@ -117,66 +141,104 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END ma_plus_average\r\n`
     sql += `, ROUND(SUM(d.ma_plus_yes_count), 2) ma_plus_yes_count\r\n`
     sql += `, ROUND(SUM(d.ma_plus_no_count), 2) ma_plus_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.ma_plus_yes_count) AS decimal)) / ( SUM(d.ma_plus_yes_count) + SUM(d.ma_plus_no_count) )) ma_plus_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.ma_plus_no_count) AS decimal)) / ( SUM(d.ma_plus_yes_count) + SUM(d.ma_plus_no_count) )) ma_plus_no_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.ma_plus_yes_count) + SUM(d.ma_plus_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.ma_plus_yes_count) AS decimal)) / ( SUM(d.ma_plus_yes_count) + SUM(d.ma_plus_no_count) ))\r\n`
+    sql += `  ELSE 0 END ma_plus_yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.ma_plus_yes_count) + SUM(d.ma_plus_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.ma_plus_no_count) AS decimal)) / ( SUM(d.ma_plus_yes_count) + SUM(d.ma_plus_no_count) ))\r\n`
+    sql += `  ELSE 0 END ma_plus_no_perc\r\n`
 
     sql += `FROM (\r\n`
     sql += `    SELECT donations.amount, donations.yes_count, donations.no_count, donations.response_count\r\n`
     sql += `    -- High school and under\r\n`
-    sql += `    , donations.amount * CAST(\r\n`
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.amount * CAST(\r\n`
     sql += `        edu.est_male_no_schooling_pop + edu.est_male_nursery_to_4th_grade_pop + edu.est_male_5th_and_6th_pop + edu.est_male_7th_and_8th_pop + edu.est_male_9th_pop + edu.est_male_10th_pop + edu.est_male_11th_pop + edu.est_male_12th_no_diploma_pop + edu.est_male_hs_grad_pop\r\n`
     sql += `        + edu.est_female_no_schooling_pop + edu.est_female_nursery_to_4th_grade_pop + edu.est_female_5th_and_6th_pop + edu.est_female_7th_and_8th_pop + edu.est_female_9th_pop + edu.est_female_10th_pop + edu.est_female_11th_pop + edu.est_female_12th_no_diploma_pop + edu.est_female_hs_grad_pop as decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop hs_and_under_amount\r\n`
-    sql += `    , donations.yes_count * CAST(\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END hs_and_under_amount\r\n`
+
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.yes_count * CAST(\r\n`
     sql += `        edu.est_male_no_schooling_pop + edu.est_male_nursery_to_4th_grade_pop + edu.est_male_5th_and_6th_pop + edu.est_male_7th_and_8th_pop + edu.est_male_9th_pop + edu.est_male_10th_pop + edu.est_male_11th_pop + edu.est_male_12th_no_diploma_pop + edu.est_male_hs_grad_pop\r\n`
     sql += `        + edu.est_female_no_schooling_pop + edu.est_female_nursery_to_4th_grade_pop + edu.est_female_5th_and_6th_pop + edu.est_female_7th_and_8th_pop + edu.est_female_9th_pop + edu.est_female_10th_pop + edu.est_female_11th_pop + edu.est_female_12th_no_diploma_pop + edu.est_female_hs_grad_pop as decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop hs_and_under_yes_count\r\n`
-    sql += `    , donations.no_count * CAST(\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END hs_and_under_yes_count\r\n`
+    
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.no_count * CAST(\r\n`
     sql += `        edu.est_male_no_schooling_pop + edu.est_male_nursery_to_4th_grade_pop + edu.est_male_5th_and_6th_pop + edu.est_male_7th_and_8th_pop + edu.est_male_9th_pop + edu.est_male_10th_pop + edu.est_male_11th_pop + edu.est_male_12th_no_diploma_pop + edu.est_male_hs_grad_pop\r\n`
     sql += `        + edu.est_female_no_schooling_pop + edu.est_female_nursery_to_4th_grade_pop + edu.est_female_5th_and_6th_pop + edu.est_female_7th_and_8th_pop + edu.est_female_9th_pop + edu.est_female_10th_pop + edu.est_female_11th_pop + edu.est_female_12th_no_diploma_pop + edu.est_female_hs_grad_pop as decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop hs_and_under_no_count\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END hs_and_under_no_count\r\n`
 
     sql += `    -- Some college\r\n`
-    sql += `    , donations.amount * CAST(\r\n`
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.amount * CAST(\r\n`
     sql += `        edu.est_male_less_than_1_year_college_pop + edu.est_male_some_college_no_degree_pop + edu.est_male_associates_degree_pop\r\n`
     sql += `        + edu.est_female_less_than_1_year_college_pop + edu.est_female_some_college_no_degree_pop + edu.est_female_associates_degree_pop as decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop some_college_amount\r\n`
-    sql += `    , donations.yes_count * CAST(\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END some_college_amount\r\n`
+    
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.yes_count * CAST(\r\n`
     sql += `        edu.est_male_less_than_1_year_college_pop + edu.est_male_some_college_no_degree_pop + edu.est_male_associates_degree_pop\r\n`
     sql += `        + edu.est_female_less_than_1_year_college_pop + edu.est_female_some_college_no_degree_pop + edu.est_female_associates_degree_pop as decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop some_college_yes_count\r\n`
-    sql += `    , donations.no_count * CAST(\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END some_college_yes_count\r\n`
+    
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.no_count * CAST(\r\n`
     sql += `        edu.est_male_less_than_1_year_college_pop + edu.est_male_some_college_no_degree_pop + edu.est_male_associates_degree_pop\r\n`
     sql += `        + edu.est_female_less_than_1_year_college_pop + edu.est_female_some_college_no_degree_pop + edu.est_female_associates_degree_pop as decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop some_college_no_count\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END some_college_no_count\r\n`
 
     sql += `    -- BA\r\n`
-    sql += `    , donations.amount * CAST(\r\n`
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.amount * CAST(\r\n`
     sql += `        edu.est_male_bachelors_degree_pop\r\n`
     sql += `        + edu.est_female_bachelors_degree_pop AS decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop ba_amount\r\n`
-    sql += `    , donations.yes_count * CAST(\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END ba_amount\r\n`
+    
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`    
+    sql += `      THEN donations.yes_count * CAST(\r\n`
     sql += `        edu.est_male_bachelors_degree_pop\r\n`
     sql += `        + edu.est_female_bachelors_degree_pop AS decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop ba_yes_count\r\n`
-    sql += `    , donations.no_count * CAST(\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END ba_yes_count\r\n`
+    
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.no_count * CAST(\r\n`
     sql += `        edu.est_male_bachelors_degree_pop\r\n`
     sql += `        + edu.est_female_bachelors_degree_pop AS decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop ba_no_count\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END ba_no_count\r\n`
 
     sql += `    -- MA plus\r\n`
-    sql += `    , donations.amount * CAST(\r\n`
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.amount * CAST(\r\n`
     sql += `        edu.est_male_masters_degree_pop + edu.est_male_professional_degree_pop + edu.est_male_doctorate_degree_pop\r\n`
     sql += `        + edu.est_female_masters_degree_pop + edu.est_female_professional_degree_pop + edu.est_female_doctorate_degree_pop AS decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop ma_plus_amount\r\n`
-    sql += `    , donations.yes_count * CAST(\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END ma_plus_amount\r\n`
+    
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.yes_count * CAST(\r\n`
     sql += `        edu.est_male_masters_degree_pop + edu.est_male_professional_degree_pop + edu.est_male_doctorate_degree_pop\r\n`
     sql += `        + edu.est_female_masters_degree_pop + edu.est_female_professional_degree_pop + edu.est_female_doctorate_degree_pop AS decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop ma_plus_yes_count\r\n`
-    sql += `    , donations.no_count * CAST(\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END ma_plus_yes_count\r\n`
+    
+    sql += `    , CASE WHEN edu.est_schooling_total_pop > 0\r\n`
+    sql += `      THEN donations.no_count * CAST(\r\n`
     sql += `        edu.est_male_masters_degree_pop + edu.est_male_professional_degree_pop + edu.est_male_doctorate_degree_pop\r\n`
     sql += `        + edu.est_female_masters_degree_pop + edu.est_female_professional_degree_pop + edu.est_female_doctorate_degree_pop AS decimal)\r\n`
-    sql += `        / edu.est_schooling_total_pop ma_plus_no_count\r\n`
+    sql += `        / edu.est_schooling_total_pop\r\n`
+    sql += `      ELSE 0 END ma_plus_no_count\r\n`
 
     sql += `    FROM (\r\n`
     sql += `        SELECT CAST(cal.detail ->> 'personId' AS bigint) person_id\r\n`

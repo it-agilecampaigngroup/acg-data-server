@@ -57,51 +57,99 @@ module.exports = async function generate(campaignId) {
 function buildSQL(campaignId) {
 
     var sql = `SELECT SUM(supportive) total_supportive_count, SUM(neutral) total_neutral_count, SUM(opposed) total_opposed_count\r\n`
-    sql += `	, ROUND(100 * SUM(supportive) / SUM(supportive + neutral + opposed)) total_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(neutral) / SUM(supportive + neutral + opposed)) total_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(opposed) / SUM(supportive + neutral + opposed)) total_opposed_perc\r\n`
+    sql += `	, CASE WHEN SUM(supportive + neutral + opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(supportive) / SUM(supportive + neutral + opposed))\r\n`
+    sql += `	  ELSE 0 END total_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(supportive + neutral + opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(neutral) / SUM(supportive + neutral + opposed))\r\n`
+    sql += `	  ELSE 0 END total_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(supportive + neutral + opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(opposed) / SUM(supportive + neutral + opposed))\r\n`
+    sql += `	  ELSE 0 END total_opposed_perc\r\n`
+    
+    sql += `	, CASE WHEN SUM(under_10k_supportive + under_10k_neutral + under_10k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(under_10k_supportive) / SUM(under_10k_supportive + under_10k_neutral + under_10k_opposed))\r\n`
+    sql += `	  ELSE 0 END under_10k_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(under_10k_supportive + under_10k_neutral + under_10k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(under_10k_neutral) / SUM(under_10k_supportive + under_10k_neutral + under_10k_opposed))\r\n`
+    sql += `	  ELSE 0 END under_10k_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(under_10k_supportive + under_10k_neutral + under_10k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(under_10k_opposed) / SUM(under_10k_supportive + under_10k_neutral + under_10k_opposed))\r\n`
+    sql += `	  ELSE 0 END under_10k_opposed_perc\r\n`
         
-    sql += `	, ROUND(100 * SUM(under_10k_supportive) / SUM(under_10k_supportive + under_10k_neutral + under_10k_opposed)) under_10k_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(under_10k_neutral) / SUM(under_10k_supportive + under_10k_neutral + under_10k_opposed)) under_10k_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(under_10k_opposed) / SUM(under_10k_supportive + under_10k_neutral + under_10k_opposed)) under_10k_opposed_perc\r\n`
+    sql += `	, CASE WHEN SUM(ten_to_24k_supportive + ten_to_24k_neutral + ten_to_24k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(ten_to_24k_supportive) / SUM(ten_to_24k_supportive + ten_to_24k_neutral + ten_to_24k_opposed))\r\n`
+    sql += `	  ELSE 0 END ten_to_24k_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(ten_to_24k_supportive + ten_to_24k_neutral + ten_to_24k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(ten_to_24k_neutral) / SUM(ten_to_24k_supportive + ten_to_24k_neutral + ten_to_24k_opposed))\r\n`
+    sql += `	  ELSE 0 END ten_to_24k_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(ten_to_24k_supportive + ten_to_24k_neutral + ten_to_24k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(ten_to_24k_opposed) / SUM(ten_to_24k_supportive + ten_to_24k_neutral + ten_to_24k_opposed))\r\n`
+    sql += `	  ELSE 0 END ten_to_24k_opposed_perc\r\n`
         
-    sql += `	, ROUND(100 * SUM(ten_to_24k_supportive) / SUM(ten_to_24k_supportive + ten_to_24k_neutral + ten_to_24k_opposed)) ten_to_24k_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(ten_to_24k_neutral) / SUM(ten_to_24k_supportive + ten_to_24k_neutral + ten_to_24k_opposed)) ten_to_24k_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(ten_to_24k_opposed) / SUM(ten_to_24k_supportive + ten_to_24k_neutral + ten_to_24k_opposed)) ten_to_24k_opposed_perc\r\n`
+    sql += `	, CASE WHEN SUM(twenty_five_to_49k_supportive + twenty_five_to_49k_neutral + twenty_five_to_49k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(twenty_five_to_49k_supportive) / SUM(twenty_five_to_49k_supportive + twenty_five_to_49k_neutral + twenty_five_to_49k_opposed))\r\n`
+    sql += `	  ELSE 0 END twenty_five_to_49k_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(twenty_five_to_49k_supportive + twenty_five_to_49k_neutral + twenty_five_to_49k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(twenty_five_to_49k_neutral) / SUM(twenty_five_to_49k_supportive + twenty_five_to_49k_neutral + twenty_five_to_49k_opposed))\r\n`
+    sql += `	  ELSE 0 END twenty_five_to_49k_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(twenty_five_to_49k_supportive + twenty_five_to_49k_neutral + twenty_five_to_49k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(twenty_five_to_49k_opposed) / SUM(twenty_five_to_49k_supportive + twenty_five_to_49k_neutral + twenty_five_to_49k_opposed))\r\n`
+    sql += `	  ELSE 0 END twenty_five_to_49k_opposed_perc\r\n`
         
-    sql += `	, ROUND(100 * SUM(twenty_five_to_49k_supportive) / SUM(twenty_five_to_49k_supportive + twenty_five_to_49k_neutral + twenty_five_to_49k_opposed)) twenty_five_to_49k_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(twenty_five_to_49k_neutral) / SUM(twenty_five_to_49k_supportive + twenty_five_to_49k_neutral + twenty_five_to_49k_opposed)) twenty_five_to_49k_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(twenty_five_to_49k_opposed) / SUM(twenty_five_to_49k_supportive + twenty_five_to_49k_neutral + twenty_five_to_49k_opposed)) twenty_five_to_49k_opposed_perc\r\n`
+    sql += `	, CASE WHEN SUM(fifty_to_74k_supportive + fifty_to_74k_neutral + fifty_to_74k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(fifty_to_74k_supportive) / SUM(fifty_to_74k_supportive + fifty_to_74k_neutral + fifty_to_74k_opposed))\r\n`
+    sql += `	  ELSE 0 END fifty_to_74k_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(fifty_to_74k_supportive + fifty_to_74k_neutral + fifty_to_74k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(fifty_to_74k_neutral) / SUM(fifty_to_74k_supportive + fifty_to_74k_neutral + fifty_to_74k_opposed))\r\n`
+    sql += `	  ELSE 0 END fifty_to_74k_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(fifty_to_74k_supportive + fifty_to_74k_neutral + fifty_to_74k_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(fifty_to_74k_opposed) / SUM(fifty_to_74k_supportive + fifty_to_74k_neutral + fifty_to_74k_opposed))\r\n`
+    sql += `	  ELSE 0 END fifty_to_74k_opposed_perc\r\n`
         
-    sql += `	, ROUND(100 * SUM(fifty_to_74k_supportive) / SUM(fifty_to_74k_supportive + fifty_to_74k_neutral + fifty_to_74k_opposed)) fifty_to_74k_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(fifty_to_74k_neutral) / SUM(fifty_to_74k_supportive + fifty_to_74k_neutral + fifty_to_74k_opposed)) fifty_to_74k_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(fifty_to_74k_opposed) / SUM(fifty_to_74k_supportive + fifty_to_74k_neutral + fifty_to_74k_opposed)) fifty_to_74k_opposed_perc\r\n`
-        
-    sql += `	, ROUND(100 * SUM(seventy_five_and_up_supportive) / SUM(seventy_five_and_up_supportive + seventy_five_and_up_neutral + seventy_five_and_up_opposed)) seventy_five_and_up_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(seventy_five_and_up_neutral) / SUM(seventy_five_and_up_supportive + seventy_five_and_up_neutral + seventy_five_and_up_opposed)) seventy_five_and_up_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(seventy_five_and_up_opposed) / SUM(seventy_five_and_up_supportive + seventy_five_and_up_neutral + seventy_five_and_up_opposed)) seventy_five_and_up_opposed_perc\r\n`
+    sql += `	, CASE WHEN SUM(seventy_five_and_up_supportive + seventy_five_and_up_neutral + seventy_five_and_up_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(seventy_five_and_up_supportive) / SUM(seventy_five_and_up_supportive + seventy_five_and_up_neutral + seventy_five_and_up_opposed))\r\n`
+    sql += `	  ELSE 0 END seventy_five_and_up_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(seventy_five_and_up_supportive + seventy_five_and_up_neutral + seventy_five_and_up_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(seventy_five_and_up_neutral) / SUM(seventy_five_and_up_supportive + seventy_five_and_up_neutral + seventy_five_and_up_opposed))\r\n`
+    sql += `	  ELSE 0 END seventy_five_and_up_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(seventy_five_and_up_supportive + seventy_five_and_up_neutral + seventy_five_and_up_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(seventy_five_and_up_opposed) / SUM(seventy_five_and_up_supportive + seventy_five_and_up_neutral + seventy_five_and_up_opposed))\r\n`
+    sql += `	  ELSE 0 END seventy_five_and_up_opposed_perc\r\n`
         
     sql += `FROM (\r\n`
     sql += `	SELECT act.supportive, act.neutral, act.opposed\r\n`
-    sql += `	, act.supportive * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop under_10k_supportive\r\n`
-    sql += `	, act.neutral * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop under_10k_neutral\r\n`
-    sql += `	, act.opposed * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop under_10k_opposed\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.supportive * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop ELSE 0 END under_10k_supportive\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.neutral * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop ELSE 0 END under_10k_neutral\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.opposed * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop ELSE 0 END under_10k_opposed\r\n`
 
-    sql += `	, act.supportive * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ten_to_24k_supportive\r\n`
-    sql += `	, act.neutral * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ten_to_24k_neutral\r\n`
-    sql += `	, act.opposed * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ten_to_24k_opposed\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.supportive * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ELSE 0 END ten_to_24k_supportive\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.neutral * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ELSE 0 END ten_to_24k_neutral\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.opposed * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ELSE 0 END ten_to_24k_opposed\r\n`
 
-    sql += `	, act.supportive * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop twenty_five_to_49k_supportive\r\n`
-    sql += `	, act.neutral * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop twenty_five_to_49k_neutral\r\n`
-    sql += `	, act.opposed * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop twenty_five_to_49k_opposed\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.supportive * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop ELSE 0 END twenty_five_to_49k_supportive\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.neutral * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop ELSE 0 END twenty_five_to_49k_neutral\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.opposed * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop ELSE 0 END twenty_five_to_49k_opposed\r\n`
 
-    sql += `	, act.supportive * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop fifty_to_74k_supportive\r\n`
-    sql += `	, act.neutral * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop fifty_to_74k_neutral\r\n`
-    sql += `	, act.opposed * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop fifty_to_74k_opposed\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.supportive * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop ELSE 0 END fifty_to_74k_supportive\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.neutral * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop ELSE 0 END fifty_to_74k_neutral\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.opposed * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop ELSE 0 END fifty_to_74k_opposed\r\n`
 
-    sql += `	, act.supportive * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop seventy_five_and_up_supportive\r\n`
-    sql += `	, act.neutral * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop seventy_five_and_up_neutral\r\n`
-    sql += `	, act.opposed * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop seventy_five_and_up_opposed\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.supportive * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop ELSE 0 END seventy_five_and_up_supportive\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.neutral * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop ELSE 0 END seventy_five_and_up_neutral\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN act.opposed * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop ELSE 0 END seventy_five_and_up_opposed\r\n`
 
     sql += `	FROM (\r\n`
     sql += `		SELECT CAST(cal.detail ->> 'personId' AS BIGINT) person_id\r\n`

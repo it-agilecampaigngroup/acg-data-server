@@ -80,8 +80,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `, SUM(d.yes_count) yes_count\r\n`
     sql += `, SUM(d.no_count) no_count\r\n`
     sql += `, SUM(d.response_count) response_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.yes_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.no_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) no_perc\r\n`
+    
+    sql += `, CASE WHEN SUM(d.yes_count) + SUM(d.no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.yes_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) ))\r\n`
+    sql += `  ELSE 0 END yes_perc\r\n`
+    
+    sql += `, CASE WHEN SUM(d.yes_count) + SUM(d.no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.no_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) ))\r\n`
+    sql += `  ELSE 0 END no_perc\r\n`
     
     sql += `-- Under 10k\r\n`
     sql += `, ROUND(SUM(d.under_10k_amount), 2) under_10k_amount\r\n`
@@ -91,8 +97,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END under_10k_average\r\n`
     sql += `, ROUND(SUM(d.under_10k_yes_count), 2) under_10k_yes_count\r\n`
     sql += `, ROUND(SUM(d.under_10k_no_count), 2) under_10k_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.under_10k_yes_count) AS decimal)) / ( SUM(d.under_10k_yes_count) + SUM(d.under_10k_no_count) )) under_10k_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.under_10k_no_count) AS decimal)) / ( SUM(d.under_10k_yes_count) + SUM(d.under_10k_no_count) )) under_10k_no_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.under_10k_yes_count) + SUM(d.under_10k_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.under_10k_yes_count) AS decimal)) / ( SUM(d.under_10k_yes_count) + SUM(d.under_10k_no_count) ))\r\n`
+    sql += `  ELSE 0 END under_10k_yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.under_10k_yes_count) + SUM(d.under_10k_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.under_10k_no_count) AS decimal)) / ( SUM(d.under_10k_yes_count) + SUM(d.under_10k_no_count) ))\r\n`
+    sql += `  ELSE 0 END under_10k_no_perc\r\n`
     
     sql += `-- 10K to 24K\r\n`
     sql += `, ROUND(SUM(d.ten_to_24k_amount), 2) ten_to_24k_amount\r\n`
@@ -102,8 +114,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END ten_to_24k_average\r\n`
     sql += `, ROUND(SUM(d.ten_to_24k_yes_count), 2) ten_to_24k_yes_count\r\n`
     sql += `, ROUND(SUM(d.ten_to_24k_no_count), 2) ten_to_24k_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.ten_to_24k_yes_count) AS decimal)) / ( SUM(d.ten_to_24k_yes_count) + SUM(d.ten_to_24k_no_count) )) ten_to_24k_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.ten_to_24k_no_count) AS decimal)) / ( SUM(d.ten_to_24k_yes_count) + SUM(d.ten_to_24k_no_count) )) ten_to_24k_no_perc\r\n`
+    
+    sql += `, CASE WHEN SUM(d.ten_to_24k_yes_count) + SUM(d.ten_to_24k_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.ten_to_24k_yes_count) AS decimal)) / ( SUM(d.ten_to_24k_yes_count) + SUM(d.ten_to_24k_no_count) ))\r\n`
+    sql += `  ELSE 0 END ten_to_24k_yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.ten_to_24k_yes_count) + SUM(d.ten_to_24k_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.ten_to_24k_no_count) AS decimal)) / ( SUM(d.ten_to_24k_yes_count) + SUM(d.ten_to_24k_no_count) ))\r\n`
+    sql += `  ELSE 0 END ten_to_24k_no_perc\r\n`
     
     sql += `-- 25K to 49K\r\n`
     sql += `, ROUND(SUM(d.twenty_five_to_49k_amount), 2) twenty_five_to_49k_amount\r\n`
@@ -113,8 +131,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END twenty_five_to_49k_average\r\n`
     sql += `, ROUND(SUM(d.twenty_five_to_49k_yes_count), 2) twenty_five_to_49k_yes_count\r\n`
     sql += `, ROUND(SUM(d.twenty_five_to_49k_no_count), 2) twenty_five_to_49k_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.twenty_five_to_49k_yes_count) AS decimal)) / ( SUM(d.twenty_five_to_49k_yes_count) + SUM(d.twenty_five_to_49k_no_count) )) twenty_five_to_49k_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.twenty_five_to_49k_no_count) AS decimal)) / ( SUM(d.twenty_five_to_49k_yes_count) + SUM(d.twenty_five_to_49k_no_count) )) twenty_five_to_49k_no_perc\r\n`
+    
+    sql += `, CASE WHEN SUM(d.twenty_five_to_49k_yes_count) + SUM(d.twenty_five_to_49k_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.twenty_five_to_49k_yes_count) AS decimal)) / ( SUM(d.twenty_five_to_49k_yes_count) + SUM(d.twenty_five_to_49k_no_count) ))\r\n`
+    sql += `  ELSE 0 END twenty_five_to_49k_yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.twenty_five_to_49k_yes_count) + SUM(d.twenty_five_to_49k_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.twenty_five_to_49k_no_count) AS decimal)) / ( SUM(d.twenty_five_to_49k_yes_count) + SUM(d.twenty_five_to_49k_no_count) ))\r\n`
+    sql += `  ELSE 0 END twenty_five_to_49k_no_perc\r\n`
     
     sql += `-- 50K to 74K\r\n`
     sql += `, ROUND(SUM(d.fifty_to_74k_amount), 2) fifty_to_74k_amount\r\n`
@@ -124,8 +148,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END fifty_to_74k_average\r\n`
     sql += `, ROUND(SUM(d.fifty_to_74k_yes_count), 2) fifty_to_74k_yes_count\r\n`
     sql += `, ROUND(SUM(d.fifty_to_74k_no_count), 2) fifty_to_74k_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.fifty_to_74k_yes_count) AS decimal)) / ( SUM(d.fifty_to_74k_yes_count) + SUM(d.fifty_to_74k_no_count) )) fifty_to_74k_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.fifty_to_74k_no_count) AS decimal)) / ( SUM(d.fifty_to_74k_yes_count) + SUM(d.fifty_to_74k_no_count) )) fifty_to_74k_no_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.fifty_to_74k_yes_count) + SUM(d.fifty_to_74k_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.fifty_to_74k_yes_count) AS decimal)) / ( SUM(d.fifty_to_74k_yes_count) + SUM(d.fifty_to_74k_no_count) ))\r\n`
+    sql += `  ELSE 0 END fifty_to_74k_yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.fifty_to_74k_yes_count) + SUM(d.fifty_to_74k_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.fifty_to_74k_no_count) AS decimal)) / ( SUM(d.fifty_to_74k_yes_count) + SUM(d.fifty_to_74k_no_count) ))\r\n`
+    sql += `  ELSE 0 END fifty_to_74k_no_perc\r\n`
     
     sql += `-- 75K and up\r\n`
     sql += `, ROUND(SUM(d.seventy_five_and_up_amount), 2) seventy_five_and_up_amount\r\n`
@@ -135,35 +165,41 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END seventy_five_and_up_average\r\n`
     sql += `, ROUND(SUM(d.seventy_five_and_up_yes_count), 2) seventy_five_and_up_yes_count\r\n`
     sql += `, ROUND(SUM(d.seventy_five_and_up_no_count), 2) seventy_five_and_up_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.seventy_five_and_up_yes_count) AS decimal)) / ( SUM(d.seventy_five_and_up_yes_count) + SUM(d.seventy_five_and_up_no_count) )) seventy_five_and_up_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.seventy_five_and_up_no_count) AS decimal)) / ( SUM(d.seventy_five_and_up_yes_count) + SUM(d.seventy_five_and_up_no_count) )) seventy_five_and_up_no_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.seventy_five_and_up_yes_count) + SUM(d.seventy_five_and_up_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.seventy_five_and_up_yes_count) AS decimal)) / ( SUM(d.seventy_five_and_up_yes_count) + SUM(d.seventy_five_and_up_no_count) ))\r\n`
+    sql += `  ELSE 0 END seventy_five_and_up_yes_perc\r\n`
+
+    sql += `, CASE WHEN SUM(d.seventy_five_and_up_yes_count) + SUM(d.seventy_five_and_up_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.seventy_five_and_up_no_count) AS decimal)) / ( SUM(d.seventy_five_and_up_yes_count) + SUM(d.seventy_five_and_up_no_count) ))\r\n`
+    sql += `  ELSE 0 END seventy_five_and_up_no_perc\r\n`
     
     sql += `FROM (\r\n`
     sql += `    SELECT donations.amount, donations.yes_count, donations.no_count, donations.response_count\r\n`
     sql += `    -- Under 10K\r\n`
-    sql += `	, donations.amount * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop under_10k_amount\r\n`
-    sql += `	, donations.yes_count * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop under_10k_yes_count\r\n`
-    sql += `	, donations.no_count * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop under_10k_no_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.amount * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop ELSE 0 END under_10k_amount\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.yes_count * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop ELSE 0 END under_10k_yes_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.no_count * CAST(income.est_under_10k_pop as decimal) / income.est_income_total_pop ELSE 0 END under_10k_no_count\r\n`
 
     sql += `-- 10K to 24K\r\n`
-    sql += `	, donations.amount * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ten_to_24k_amount\r\n`
-    sql += `	, donations.yes_count * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ten_to_24k_yes_count\r\n`
-    sql += `	, donations.no_count * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ten_to_24k_no_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.amount * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ELSE 0 END ten_to_24k_amount\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.yes_count * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ELSE 0 END ten_to_24k_yes_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.no_count * CAST(income.est_10_to_14k_pop + income.est_15_to_19k_pop + income.est_20_to_24k_pop as decimal) / income.est_income_total_pop ELSE 0 END ten_to_24k_no_count\r\n`
 
     sql += `-- 25K to 49K\r\n`
-    sql += `	, donations.amount * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop twenty_five_to_49k_amount\r\n`
-    sql += `	, donations.yes_count * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop twenty_five_to_49k_yes_count\r\n`
-    sql += `	, donations.no_count * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop twenty_five_to_49k_no_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.amount * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop ELSE 0 END twenty_five_to_49k_amount\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.yes_count * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop ELSE 0 END twenty_five_to_49k_yes_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.no_count * CAST(income.est_25_to_29k_pop + income.est_30_to_34k_pop + income.est_35_to_39k_pop + income.est_40_to_44k_pop + income.est_45_to_49k_pop as decimal) / income.est_income_total_pop ELSE 0 END twenty_five_to_49k_no_count\r\n`
 
     sql += `-- 50K to 74K\r\n`
-    sql += `	, donations.amount * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop fifty_to_74k_amount\r\n`
-    sql += `	, donations.yes_count * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop fifty_to_74k_yes_count\r\n`
-    sql += `	, donations.no_count * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop fifty_to_74k_no_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.amount * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop ELSE 0 END fifty_to_74k_amount\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.yes_count * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop ELSE 0 END fifty_to_74k_yes_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.no_count * CAST(income.est_50_to_59k_pop + income.est_60_to_74k_pop as decimal) / income.est_income_total_pop ELSE 0 END fifty_to_74k_no_count\r\n`
 
     sql += `-- 75K and up\r\n`
-    sql += `	, donations.amount * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop seventy_five_and_up_amount\r\n`
-    sql += `	, donations.yes_count * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop seventy_five_and_up_yes_count\r\n`
-    sql += `	, donations.no_count * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop seventy_five_and_up_no_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.amount * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop ELSE 0 END seventy_five_and_up_amount\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.yes_count * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop ELSE 0 END seventy_five_and_up_yes_count\r\n`
+    sql += `	, CASE WHEN income.est_income_total_pop > 0 THEN donations.no_count * CAST(income.est_75_to_99k_pop + income.est_100_to_124k_pop + income.est_125_to_149k_pop + income.est_150_to_199k_pop + income.est_200k_and_up_pop as decimal) / income.est_income_total_pop ELSE 0 END seventy_five_and_up_no_count\r\n`
 
     sql += `    FROM (\r\n`
     sql += `        SELECT CAST(cal.detail ->> 'personId' AS bigint) person_id\r\n`

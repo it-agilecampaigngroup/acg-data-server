@@ -48,42 +48,84 @@ module.exports = async function generate(campaignId) {
 function buildSQL(campaignId) {
 
     var sql = `SELECT SUM(supportive) total_supportive_count, SUM(neutral) total_neutral_count, SUM(opposed) total_opposed_count\r\n`
-    sql += `    , ROUND(100 * SUM(supportive) / SUM(supportive + neutral + opposed)) total_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(neutral) / SUM(supportive + neutral + opposed)) total_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(opposed) / SUM(supportive + neutral + opposed)) total_opposed_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(supportive + neutral + opposed) > 0\r\n`
+    sql += `      THEN ROUND(100 * SUM(supportive) / SUM(supportive + neutral + opposed))\r\n`
+    sql += `	  ELSE 0 END total_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(supportive + neutral + opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(neutral) / SUM(supportive + neutral + opposed))\r\n`
+    sql += `	  ELSE 0 END total_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(supportive + neutral + opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(opposed) / SUM(supportive + neutral + opposed))\r\n`
+    sql += `	  ELSE 0 END total_opposed_perc\r\n`
     
-    sql += `	, ROUND(100 * SUM(hispanic_supportive) / SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed)) hispanic_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(hispanic_neutral) / SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed)) hispanic_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(hispanic_opposed) / SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed)) hispanic_opposed_perc\r\n`
+    sql += `	, CASE WHEN SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(hispanic_supportive) / SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed))\r\n`
+    sql += `	  ELSE 0 END hispanic_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(hispanic_neutral) / SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed))\r\n`
+    sql += `	  ELSE 0 END hispanic_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(hispanic_opposed) / SUM(hispanic_supportive + hispanic_neutral + hispanic_opposed))\r\n`
+    sql += `	  ELSE 0 END hispanic_opposed_perc\r\n`
     
-    sql += `	, ROUND(100 * SUM(asian_supportive) / SUM(asian_supportive + asian_neutral + asian_opposed)) asian_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(asian_neutral) / SUM(asian_supportive + asian_neutral + asian_opposed)) asian_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(asian_opposed) / SUM(asian_supportive + asian_neutral + asian_opposed)) asian_opposed_perc\r\n`
+    sql += `	, CASE WHEN SUM(asian_supportive + asian_neutral + asian_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(asian_supportive) / SUM(asian_supportive + asian_neutral + asian_opposed))\r\n`
+    sql += `	  ELSE 0 END asian_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(asian_supportive + asian_neutral + asian_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(asian_neutral) / SUM(asian_supportive + asian_neutral + asian_opposed))\r\n`
+    sql += `	  ELSE 0 END asian_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(asian_supportive + asian_neutral + asian_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(asian_opposed) / SUM(asian_supportive + asian_neutral + asian_opposed))\r\n`
+    sql += `	  ELSE 0 END asian_opposed_perc\r\n`
     
-    sql += `	, ROUND(100 * SUM(afam_black_supportive) / SUM(afam_black_supportive + afam_black_neutral + afam_black_opposed)) afam_black_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(afam_black_neutral) / SUM(afam_black_supportive + afam_black_neutral + afam_black_opposed)) afam_black_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(afam_black_opposed) / SUM(afam_black_supportive + afam_black_neutral + afam_black_opposed)) afam_black_opposed_perc\r\n`
+    sql += `	, CASE WHEN SUM(afam_black_supportive + afam_black_neutral + afam_black_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(afam_black_supportive) / SUM(afam_black_supportive + afam_black_neutral + afam_black_opposed))\r\n`
+    sql += `	  ELSE 0 END afam_black_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(afam_black_supportive + afam_black_neutral + afam_black_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(afam_black_neutral) / SUM(afam_black_supportive + afam_black_neutral + afam_black_opposed))\r\n`
+    sql += `	  ELSE 0 END afam_black_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(afam_black_supportive + afam_black_neutral + afam_black_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(afam_black_opposed) / SUM(afam_black_supportive + afam_black_neutral + afam_black_opposed))\r\n`
+    sql += `	  ELSE 0 END afam_black_opposed_perc\r\n`
     
-    sql += `	, ROUND(100 * SUM(white_supportive) / SUM(white_supportive + white_neutral + white_opposed)) white_supportive_perc\r\n`
-    sql += `	, ROUND(100 * SUM(white_neutral) / SUM(white_supportive + white_neutral + white_opposed)) white_neutral_perc\r\n`
-    sql += `	, ROUND(100 * SUM(white_opposed) / SUM(white_supportive + white_neutral + white_opposed)) white_opposed_perc\r\n`
+    sql += `	, CASE WHEN SUM(white_supportive + white_neutral + white_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(white_supportive) / SUM(white_supportive + white_neutral + white_opposed))\r\n`
+    sql += `	  ELSE 0 END white_supportive_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(white_supportive + white_neutral + white_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(white_neutral) / SUM(white_supportive + white_neutral + white_opposed))\r\n`
+    sql += `	  ELSE 0 END white_neutral_perc\r\n`
+
+    sql += `	, CASE WHEN SUM(white_supportive + white_neutral + white_opposed) > 0\r\n`
+    sql += `	  THEN ROUND(100 * SUM(white_opposed) / SUM(white_supportive + white_neutral + white_opposed))\r\n`
+    sql += `	  ELSE 0 END white_opposed_perc\r\n`
+
     sql += `FROM (\r\n`
     sql += `	SELECT act.supportive, act.neutral, act.opposed\r\n`
-    sql += `	, act.supportive * CAST(census.hispanic_pop AS decimal)/census.total_pop hispanic_supportive\r\n`
-    sql += `	, act.neutral * CAST(census.hispanic_pop AS decimal)/census.total_pop hispanic_neutral\r\n`
-    sql += `	, act.opposed * CAST(census.hispanic_pop AS decimal)/census.total_pop hispanic_opposed\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.supportive * CAST(census.hispanic_pop AS decimal)/census.total_pop ELSE 0 END hispanic_supportive\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.neutral * CAST(census.hispanic_pop AS decimal)/census.total_pop ELSE 0 END hispanic_neutral\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.opposed * CAST(census.hispanic_pop AS decimal)/census.total_pop ELSE 0 END hispanic_opposed\r\n`
     
-    sql += `	, act.supportive * CAST(census.asian_pop AS decimal)/census.total_pop asian_supportive\r\n`
-    sql += `	, act.neutral * CAST(census.asian_pop AS decimal)/census.total_pop asian_neutral\r\n`
-    sql += `	, act.opposed * CAST(census.asian_pop AS decimal)/census.total_pop asian_opposed\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.supportive * CAST(census.asian_pop AS decimal)/census.total_pop ELSE 0 END asian_supportive\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.neutral * CAST(census.asian_pop AS decimal)/census.total_pop ELSE 0 END asian_neutral\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.opposed * CAST(census.asian_pop AS decimal)/census.total_pop ELSE 0 END asian_opposed\r\n`
     
-    sql += `	, act.supportive * CAST(census.afam_black_pop AS decimal)/census.total_pop afam_black_supportive\r\n`
-    sql += `	, act.neutral * CAST(census.afam_black_pop AS decimal)/census.total_pop afam_black_neutral\r\n`
-    sql += `	, act.opposed * CAST(census.afam_black_pop AS decimal)/census.total_pop afam_black_opposed\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.supportive * CAST(census.afam_black_pop AS decimal)/census.total_pop ELSE 0 END afam_black_supportive\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.neutral * CAST(census.afam_black_pop AS decimal)/census.total_pop ELSE 0 END afam_black_neutral\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.opposed * CAST(census.afam_black_pop AS decimal)/census.total_pop ELSE 0 END afam_black_opposed\r\n`
     
-    sql += `	, act.supportive * CAST(census.white_pop AS decimal)/census.total_pop white_supportive\r\n`
-    sql += `	, act.neutral * CAST(census.white_pop AS decimal)/census.total_pop white_neutral\r\n`
-    sql += `	, act.opposed * CAST(census.white_pop AS decimal)/census.total_pop white_opposed\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.supportive * CAST(census.white_pop AS decimal)/census.total_pop ELSE 0 END white_supportive\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.neutral * CAST(census.white_pop AS decimal)/census.total_pop ELSE 0 END white_neutral\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN act.opposed * CAST(census.white_pop AS decimal)/census.total_pop ELSE 0 END white_opposed\r\n`
     sql += `	FROM (\r\n`
     sql += `		SELECT CAST(cal.detail ->> 'personId' AS BIGINT) person_id\r\n`
     sql += `			, CASE WHEN CAST(cal.detail ->> 'supportResult' AS INTEGER) < 3 THEN 1 ELSE 0 END supportive\r\n`

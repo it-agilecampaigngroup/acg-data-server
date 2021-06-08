@@ -148,6 +148,7 @@ async function processContactAttemptFailedResponse(response) {
             // so contact will be contacted again
             sql = "UPDATE base.contact_status\r\n"
             sql += `SET lease_time = NULL\r\n`
+            sql += `, donation_request_allowed_date = NOW() + interval '7 days'\r\n`
             sql += `, modified_by = '${response.actor.username}'\r\n`
             sql += `, date_modified = NOW()\r\n`
             sql += `WHERE person_id = ${response.detail.personId};`
@@ -157,9 +158,23 @@ async function processContactAttemptFailedResponse(response) {
         case "CONTACT HAS MOVED":
             // Remove the contact's address from the 
             // person_address table
-            sql = `DELETE FROM base.person_address\r\n`
-            sql += `WHERE person_id = ${response.detail.personId}\r\n`
-            sql += `AND address_id = ${response.detail.addressId};`
+            if( response.detail.addressId !== undefined ) {
+                // Address ID was provided
+                sql = `DELETE FROM base.person_address\r\n`
+                sql += `WHERE person_id = ${response.detail.personId}\r\n`
+                sql += `AND address_id = ${response.detail.addressId};`
+            } else {
+                // Address ID not provided. Get it
+                // from the person_address table.
+                sql = `DELETE FROM base.person_address\r\n`
+                sql += `WHERE person_id = ${response.detail.personId}\r\n`
+                sql += `AND address_id = (\r\n`
+                sql += `    SELECT address_id\r\n`
+                sql += `    FROM base.person_address\r\n`
+                sql += `    WHERE person_id = ${response.detail.personId}\r\n`
+                sql += `    AND is_primary = true\r\n`
+                sql += `    );\r\n`
+            }
             executeSQL(sql)
             break;
 

@@ -73,8 +73,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `, SUM(d.yes_count) yes_count\r\n`
     sql += `, SUM(d.no_count) no_count\r\n`
     sql += `, SUM(d.response_count) response_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.yes_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.no_count) AS decimal)) / ( SUM(d.yes_count) + SUM(d.no_count) )) no_perc\r\n`
+    
+    sql += `, CASE WHEN SUM(d.yes_count) + SUM(d.no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.yes_count) AS decimal)) / (SUM(d.yes_count) + SUM(d.no_count)) )\r\n`
+    sql += `  ELSE 0 END yes_perc\r\n`
+    
+    sql += `, CASE WHEN SUM(d.yes_count) + SUM(d.no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.no_count) AS decimal)) / (SUM(d.yes_count) + SUM(d.no_count)) )\r\n`
+    sql += `  ELSE 0 END no_perc\r\n`
 
     sql += `-- Hispanic\r\n`
     sql += `, ROUND(SUM(d.hispanic_amount), 2) hispanic_amount\r\n`
@@ -84,8 +90,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END hispanic_average\r\n`
     sql += `, ROUND(SUM(d.hispanic_yes_count), 2) hispanic_yes_count\r\n`
     sql += `, ROUND(SUM(d.hispanic_no_count), 2) hispanic_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.hispanic_yes_count) AS decimal)) / ( SUM(d.hispanic_yes_count) + SUM(d.hispanic_no_count) )) hispanic_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.hispanic_no_count) AS decimal)) / ( SUM(d.hispanic_yes_count) + SUM(d.hispanic_no_count) )) hispanic_no_perc\r\n`
+    //sql += `, ROUND( (100 * CAST(SUM(d.hispanic_yes_count) AS decimal)) / ( SUM(d.hispanic_yes_count) + SUM(d.hispanic_no_count) )) hispanic_yes_perc\r\n`
+    sql += `, CASE WHEN SUM(d.hispanic_yes_count) + SUM(d.hispanic_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.hispanic_yes_count) AS decimal)) / (SUM(d.hispanic_yes_count) + SUM(d.hispanic_no_count)) )\r\n`
+    sql += `  ELSE 0 END hispanic_yes_perc\r\n`
+    //sql += `, ROUND( (100 * CAST(SUM(d.hispanic_no_count) AS decimal)) / ( SUM(d.hispanic_yes_count) + SUM(d.hispanic_no_count) )) hispanic_no_perc\r\n`
+    sql += `, CASE WHEN SUM(d.hispanic_yes_count) + SUM(d.hispanic_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.hispanic_no_count) AS decimal)) / (SUM(d.hispanic_yes_count) + SUM(d.hispanic_no_count)) )\r\n`
+    sql += `  ELSE 0 END hispanic_no_perc\r\n`
 
     sql += `-- Asian\r\n`
     sql += `, ROUND(SUM(d.asian_amount), 2) asian_amount\r\n`
@@ -95,8 +107,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END asian_average\r\n`
     sql += `, ROUND(SUM(d.asian_yes_count), 2) asian_yes_count\r\n`
     sql += `, ROUND(SUM(d.asian_no_count), 2) asian_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.asian_yes_count) AS decimal)) / ( SUM(d.asian_yes_count) + SUM(d.asian_no_count) )) asian_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.asian_no_count) AS decimal)) / ( SUM(d.asian_yes_count) + SUM(d.asian_no_count) )) asian_no_perc\r\n`
+    //sql += `, ROUND( (100 * CAST(SUM(d.asian_yes_count) AS decimal)) / ( SUM(d.asian_yes_count) + SUM(d.asian_no_count) )) asian_yes_perc\r\n`
+    sql += `, CASE WHEN SUM(d.asian_yes_count) + SUM(d.asian_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.asian_yes_count) AS decimal)) / (SUM(d.asian_yes_count) + SUM(d.asian_no_count)) )\r\n`
+    sql += `  ELSE 0 END asian_yes_perc\r\n`
+    //sql += `, ROUND( (100 * CAST(SUM(d.asian_no_count) AS decimal)) / ( SUM(d.asian_yes_count) + SUM(d.asian_no_count) )) asian_no_perc\r\n`
+    sql += `, CASE WHEN SUM(d.asian_yes_count) + SUM(d.asian_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.asian_no_count) AS decimal)) / (SUM(d.asian_yes_count) + SUM(d.asian_no_count)) )\r\n`
+    sql += `  ELSE 0 END asian_no_perc\r\n`
 
     sql += `-- AFAm/Black\r\n`
     sql += `, ROUND(SUM(d.afam_black_amount), 2) afam_black_amount\r\n`
@@ -106,8 +124,14 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END afam_black_average\r\n`
     sql += `, ROUND(SUM(d.afam_black_yes_count), 2) afam_black_yes_count\r\n`
     sql += `, ROUND(SUM(d.afam_black_no_count), 2) afam_black_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.afam_black_yes_count) AS decimal)) / ( SUM(d.afam_black_yes_count) + SUM(d.afam_black_no_count) )) afam_black_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.afam_black_no_count) AS decimal)) / ( SUM(d.afam_black_yes_count) + SUM(d.afam_black_no_count) )) afam_black_no_perc\r\n`
+    //sql += `, ROUND( (100 * CAST(SUM(d.afam_black_yes_count) AS decimal)) / ( SUM(d.afam_black_yes_count) + SUM(d.afam_black_no_count) )) afam_black_yes_perc\r\n`
+    sql += `, CASE WHEN SUM(d.afam_black_yes_count) + SUM(d.afam_black_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.afam_black_yes_count) AS decimal)) / (SUM(d.afam_black_yes_count) + SUM(d.afam_black_no_count)) )\r\n`
+    sql += `  ELSE 0 END afam_black_yes_perc\r\n`
+    //sql += `, ROUND( (100 * CAST(SUM(d.afam_black_no_count) AS decimal)) / ( SUM(d.afam_black_yes_count) + SUM(d.afam_black_no_count) )) afam_black_no_perc\r\n`
+    sql += `, CASE WHEN SUM(d.afam_black_yes_count) + SUM(d.afam_black_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.afam_black_no_count) AS decimal)) / (SUM(d.afam_black_yes_count) + SUM(d.afam_black_no_count)) )\r\n`
+    sql += `  ELSE 0 END afam_black_no_perc\r\n`
 
     sql += `-- White\r\n`
     sql += `, ROUND(SUM(d.white_amount), 2) white_amount\r\n`
@@ -117,30 +141,36 @@ function buildSQL(campaignId, contactMethod) {
     sql += `    END white_average\r\n`
     sql += `, ROUND(SUM(d.white_yes_count), 2) white_yes_count\r\n`
     sql += `, ROUND(SUM(d.white_no_count), 2) white_no_count\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.white_yes_count) AS decimal)) / ( SUM(d.white_yes_count) + SUM(d.white_no_count) )) white_yes_perc\r\n`
-    sql += `, ROUND( (100 * CAST(SUM(d.white_no_count) AS decimal)) / ( SUM(d.white_yes_count) + SUM(d.white_no_count) )) white_no_perc\r\n`
+    //sql += `, ROUND( (100 * CAST(SUM(d.white_yes_count) AS decimal)) / ( SUM(d.white_yes_count) + SUM(d.white_no_count) )) white_yes_perc\r\n`
+    sql += `, CASE WHEN SUM(d.white_yes_count) + SUM(d.white_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.white_yes_count) AS decimal)) / (SUM(d.white_yes_count) + SUM(d.white_no_count)) )\r\n`
+    sql += `  ELSE 0 END white_yes_perc\r\n`
+    //sql += `, ROUND( (100 * CAST(SUM(d.white_no_count) AS decimal)) / ( SUM(d.white_yes_count) + SUM(d.white_no_count) )) white_no_perc\r\n`
+    sql += `, CASE WHEN SUM(d.white_yes_count) + SUM(d.white_no_count) > 0\r\n`
+    sql += `  THEN ROUND( (100 * CAST(SUM(d.white_no_count) AS decimal)) / (SUM(d.white_yes_count) + SUM(d.white_no_count)) )\r\n`
+    sql += `  ELSE 0 END white_no_perc\r\n`
 
     sql += `FROM (\r\n`
     sql += `    SELECT donations.amount, donations.yes_count, donations.no_count, donations.response_count\r\n`
     sql += `    -- Hispanic\r\n`
-    sql += `	, donations.amount * CAST(census.hispanic_pop AS decimal)/census.total_pop hispanic_amount\r\n`
-    sql += `	, donations.yes_count * CAST(census.hispanic_pop AS decimal)/census.total_pop hispanic_yes_count\r\n`
-    sql += `	, donations.no_count * CAST(census.hispanic_pop AS decimal)/census.total_pop hispanic_no_count\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.amount * CAST(census.hispanic_pop AS decimal)/census.total_pop ELSE 0 END hispanic_amount\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.yes_count * CAST(census.hispanic_pop AS decimal)/census.total_pop ELSE 0 END hispanic_yes_count\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.no_count * CAST(census.hispanic_pop AS decimal)/census.total_pop ELSE 0 END hispanic_no_count\r\n`
 
     sql += `    -- Asian\r\n`    
-    sql += `	, donations.amount * CAST(census.asian_pop AS decimal)/census.total_pop asian_amount\r\n`
-    sql += `	, donations.yes_count * CAST(census.asian_pop AS decimal)/census.total_pop asian_yes_count\r\n`
-    sql += `	, donations.no_count * CAST(census.asian_pop AS decimal)/census.total_pop asian_no_count\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.amount * CAST(census.asian_pop AS decimal)/census.total_pop ELSE 0 END asian_amount\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.yes_count * CAST(census.asian_pop AS decimal)/census.total_pop ELSE 0 END asian_yes_count\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.no_count * CAST(census.asian_pop AS decimal)/census.total_pop ELSE 0 END asian_no_count\r\n`
 
     sql += `    -- AFAm/Black\r\n`    
-    sql += `	, donations.amount * CAST(census.afam_black_pop AS decimal)/census.total_pop afam_black_amount\r\n`
-    sql += `	, donations.yes_count * CAST(census.afam_black_pop AS decimal)/census.total_pop afam_black_yes_count\r\n`
-    sql += `	, donations.no_count * CAST(census.afam_black_pop AS decimal)/census.total_pop afam_black_no_count\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.amount * CAST(census.afam_black_pop AS decimal)/census.total_pop ELSE 0 END afam_black_amount\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.yes_count * CAST(census.afam_black_pop AS decimal)/census.total_pop ELSE 0 END afam_black_yes_count\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.no_count * CAST(census.afam_black_pop AS decimal)/census.total_pop ELSE 0 END afam_black_no_count\r\n`
 
     sql += `    -- White\r\n`    
-    sql += `	, donations.amount * CAST(census.white_pop AS decimal)/census.total_pop white_amount\r\n`
-    sql += `	, donations.yes_count * CAST(census.white_pop AS decimal)/census.total_pop white_yes_count\r\n`
-    sql += `	, donations.no_count * CAST(census.white_pop AS decimal)/census.total_pop white_no_count\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.amount * CAST(census.white_pop AS decimal)/census.total_pop ELSE 0 END white_amount\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.yes_count * CAST(census.white_pop AS decimal)/census.total_pop ELSE 0 END white_yes_count\r\n`
+    sql += `	, CASE WHEN census.total_pop > 0 THEN donations.no_count * CAST(census.white_pop AS decimal)/census.total_pop ELSE 0 END white_no_count\r\n`
 
     sql += `    FROM (\r\n`
     sql += `        SELECT CAST(cal.detail ->> 'personId' AS bigint) person_id\r\n`
