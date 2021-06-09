@@ -8,6 +8,16 @@ const ContactAction = require('../modules/ContactAction')
 const Contact = require('../modules/Contact')
 const Phone = require('../modules/Phone')
 const Address = require('../modules/Address')
+const Queue = require('../modules/Queue')
+
+let donationCallContactQueue = new Queue()
+let persuasionCallContactQueue = new Queue()
+let turnoutCallContactQueue = new Queue()
+let donationCanvassContactQueue = new Queue()
+let persuasionCanvassContactQueue = new Queue()
+let turnoutCanvassContactQueue = new Queue()
+
+initializeContactQueues()
 
 module.exports = {
     
@@ -41,14 +51,14 @@ module.exports = {
 
         // Things look good so let's try to grab a contact
         try {
+            // Get the highest rated contact
+            let contact = await this.getContact(contactReason, contactMethod)
+
             // Record a "Contact requested" action
             let action = new ContactAction("Contact requested", actor
                 , contactReason, contactMethod, "Contact requested", "")
             ActionRecorder.recordContactAction(action)
 
-            // Get the best contact
-            let contact = await this.getContact(contactReason, contactMethod)
-            
             // Record a "Contact leased" action. We send the message before
             // marking the contact as leased in our database to minimize
             // the possibility that some other campaign will grab the contact
@@ -78,57 +88,105 @@ module.exports = {
     // 
     //===================================================================================
     async getContact(contactReason, contactMethod) {
-       
-        // Build the SQL SELECT stmt
-        let select = buildContactRequestSelect(contactReason, contactMethod)
 
-        // For debugging
-        //console.log(select)
-    
-        // Execute the query and return the contact
-        try {
-            const dbres = await db.query(select)
-            if( dbres.rowCount == 1) {
-                const row = dbres.rows[0]
-                //Populate the donation summary if no info
-                // was returned by the query
-                var donationSummary = row.donation_summary
-                if( donationSummary === null) {
-                    donationSummary = {
-                        lastDonationAmount: 0
-                        , recommendedAsk: 500.00
-                    }
+        // Get the appropriate queue
+        var queue = getContactQueue(contactReason, contactMethod)
+        if( queue == undefined ) {
+            let err_msg = `Queue for ${contactReason}/${contactMethod} is not supported.`
+            ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'getContact', err_msg, new Error(err_msg)))
+            return undefined
+        }
+
+        var contact = undefined
+        while( contact == undefined ) {
+        // If queue is empty then initialize it
+            if( queue.isEmpty() ) 
+                await initializeContactQueue(contactReason, contactMethod)
+
+            // Get a contact
+            let contact = queue.pop()
+
+            if( contact != undefined ) {
+                // Make sure the contact is not leased and return it.
+                // We need to make sure the contact isn't leased
+                // because some other campaign may have leased it
+                // after it was put into the queue.
+                if( await isContactLeased(contact.personId) == false ) {
+                    return contact
                 }
 
-                //Create and return the contact
-                return new Contact(
-                row.first_name
-                , row.last_name
-                , row.middle_name
-                , row.prefix
-                , row.suffix
-                , row.rating
-                , translatePhones(row.phones)
-                , translateAddresses(row.addresses)
-                , donationSummary
-                , row.districts
-                , row.lease_time
-                , row.last_contact_attempt_time
-                , row.donation_request_allowed_date
-                , row.persuasion_attempt_allowed_date
-                , row.turnout_request_allowed_date
-                , {}
-                , []
-                , row.person_id
-                , row.is_virtual
-                )
+                // Contact is leased. Try another one.
+                contact = undefined // Keep the loop alive.
+
+            } else {
+                // There are no more contacts for the reason/method
+                let err_msg = `No contacts were found for ${contactReason}/${contactMethod}.`
+                ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'getContact', err_msg, new Error(err_msg)))
+                return undefined
             }
-            return undefined
-        } catch(e) {
-            ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'getContact', 'Database error retrieving random contact', e))
-            throw new Error(e.message)
         }
+
+        return undefined // This should never happen
     },
+
+    // //====================================================================================
+    // // Retrieve a contact
+    // //
+    // // Returns: A populated Contact object 
+    // // 
+    // //===================================================================================
+    // async getContact(contactReason, contactMethod) {
+       
+    //     // Build the SQL SELECT stmt
+    //     let select = buildContactRequestSelect(contactReason, contactMethod)
+
+    //     // For debugging
+    //     //console.log(select)
+    
+    //     // Execute the query and return the contact
+    //     try {
+    //         const dbres = await db.query(select)
+    //         if( dbres.rowCount == 1) {
+    //             const row = dbres.rows[0]
+    //             //Populate the donation summary if no info
+    //             // was returned by the query
+    //             var donationSummary = row.donation_summary
+    //             if( donationSummary === null) {
+    //                 donationSummary = {
+    //                     lastDonationAmount: 0
+    //                     , recommendedAsk: 500.00
+    //                 }
+    //             }
+
+    //             //Create and return the contact
+    //             return new Contact(
+    //             row.first_name
+    //             , row.last_name
+    //             , row.middle_name
+    //             , row.prefix
+    //             , row.suffix
+    //             , row.rating
+    //             , translatePhones(row.phones)
+    //             , translateAddresses(row.addresses)
+    //             , donationSummary
+    //             , row.districts
+    //             , row.lease_time
+    //             , row.last_contact_attempt_time
+    //             , row.donation_request_allowed_date
+    //             , row.persuasion_attempt_allowed_date
+    //             , row.turnout_request_allowed_date
+    //             , {}
+    //             , []
+    //             , row.person_id
+    //             , row.is_virtual
+    //             )
+    //         }
+    //         return undefined
+    //     } catch(e) {
+    //         ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'getContact', 'Database error retrieving random contact', e))
+    //         throw new Error(e.message)
+    //     }
+    // },
 
     //====================================================================================
     // Mark a contact as "leased"
@@ -247,10 +305,171 @@ function buildContactRequestSelect(contactReason, contactMethod) {
         default:
             break;
     }
-    // Finally, add a limit of one record because we only need one
-    select += "LIMIT 1;"
+    // // Finally, add a limit of one record because we only need one
+    // select += "LIMIT 1;"
+
+    // Finally, add a limit of 100 records
+    select += "LIMIT 100;"
 
     return select;
+}
+
+// Function to intitalize any one of the contact queues
+async function initializeContactQueue(contactReason, contactMethod) {
+
+    var targetQueue = getContactQueue(contactReason, contactMethod)
+
+    // Make sure we support the stack to be initialized
+    if( targetQueue == undefined ) {
+        let err_msg = `Queue for ${contactReason}/${contactMethod} is not supported.`
+        ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'initializeContactQueue', err_msg, new Error(err_msg)))
+        return false
+    }
+        
+    // Build the SQL SELECT stmt
+    let select = buildContactRequestSelect(contactReason, contactMethod)
+
+    // For debugging
+    //console.log(select)
+
+    // Execute the query and populate the queue
+    try {
+        const dbres = await db.query(select)
+        if( dbres.rowCount > 0 ) {
+            // Push the contacts into the queue
+            for( var idx = 0; idx < dbres.rowCount; idx++ ) {
+                let row = dbres.rows[idx]
+
+                //Populate the donation summary if no info
+                // was returned by the query
+                var donationSummary = row.donation_summary
+                if( donationSummary === null) {
+                    donationSummary = {
+                        lastDonationAmount: 0
+                        , recommendedAsk: 500.00
+                    }
+                }
+
+                //Create and push the contact
+                targetQueue.push(
+                    new Contact(
+                    row.first_name
+                    , row.last_name
+                    , row.middle_name
+                    , row.prefix
+                    , row.suffix
+                    , row.rating
+                    , translatePhones(row.phones)
+                    , translateAddresses(row.addresses)
+                    , donationSummary
+                    , row.districts
+                    , row.lease_time
+                    , row.last_contact_attempt_time
+                    , row.donation_request_allowed_date
+                    , row.persuasion_attempt_allowed_date
+                    , row.turnout_request_allowed_date
+                    , {}
+                    , []
+                    , row.person_id
+                    , row.is_virtual
+                    )
+                )
+            }
+            return true
+        }
+        else {
+            let err_msg = `No contacts returned from the database for ${contactReason}/${contactMethod}`
+            ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'initializeContactQueue', err_msg, new Error(err_msg)))
+            return false
+        }
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'initializeContactQueue', `Database error initializing contact queue for ${contactReason}/${contactMethod}`, e))
+        throw new Error(e.message)
+    }    
+}
+
+// Function to get the appropriate contact queue
+function getContactQueue(contactReason, contactMethod) {
+    switch(contactReason.toUpperCase()) {
+        case "DONATION REQUEST":
+            switch(contactMethod.toLowerCase()) {
+                case "phone call":
+                    return donationCallContactQueue
+                    break;
+                case "canvass":
+                    return donationCanvassContactQueue
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case "PERSUASION":
+            switch(contactMethod.toLowerCase()) {
+                case "phone call":
+                    return persuasionCallContactQueue
+                    break;
+                case "canvass":
+                    return persuasionCanvassContactQueue
+                    break;
+                default:
+                    break;
+            }
+            break;                
+        case "TURNOUT":
+            switch(contactMethod.toLowerCase()) {
+                case "phone call":
+                    return turnoutCallContactQueue
+                    break;
+                case "canvass":
+                    return turnoutCanvassContactQueue
+                    break;
+                default:
+                    break;
+            }
+        default:
+            break;
+    }
+    
+    return undefined // Reason/method not currently supported
+}
+
+function initializeContactQueues() {
+    initializeContactQueue("Donation request", "phone call")
+    // initializeContactQueue("Donation request", "canvass")
+    //initializeContactQueue("Persuasion", "phone call")
+    // initializeContactQueue("Persuasion", "canvass")
+    //initializeContactQueue("Turnout", "phone call")
+    // initializeContactQueue("Turnout", "canvass")
+}
+
+// Function to check if a contact has been leased
+async function isContactLeased(personId) {
+
+    var sql = `SELECT CASE WHEN COALESCE(lease_time, NOW() - INTERVAL '1 day') < NOW() - INTERVAL '23 hours'\r\n`
+    sql += `	THEN false\r\n`
+    sql += `	ELSE true\r\n`
+    sql += `	END is_leased\r\n`
+    sql += `FROM base.contact_status\r\n`
+    sql += `WHERE person_id = ${personId};\r\n`
+
+    try {
+        const dbres = await db.query(sql)
+        if( dbres.rowCount == 0) {
+            // If no row is returned then there's
+            // no record in the contact_status
+            // table and the contact is not leased.
+            return false;
+        }
+        if( dbres.rowCount == 1) {
+            const row = dbres.rows[0]
+            return row.is_leased
+        }
+        return true; // If something is wrong assume that the contact is leased.
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'contacts.js', 'isContactLeased', 'Database error checking if contact is leased', e))
+        throw new Error(e.message)
+    }
+
 }
 
 function translatePhones( phones ) {

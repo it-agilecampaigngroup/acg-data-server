@@ -73,8 +73,9 @@ module.exports = {
     },
 
     async getActor(actorId, next) {
+        //.get(`https://vanguardcontact.com/sapi/actors/${actorId}`, {
         await axios
-        .get(`https://vanguardcontact.com/sapi/actors/${actorId}`, {
+        .get(`https://${process.env.VG_DATA_SERVER_DOMAIN}/sapi/actors/${actorId}`, {
             headers: {
                 'Authorization': `Bearer ${await token()}`
             }
@@ -88,8 +89,9 @@ module.exports = {
     }, 
 
     async getManagedActors(managerId, next) {
+        //.get(`http://vanguardcontact.com/sapi/reports/ManagedActorList?campaignId=${this.campaignId}&managerId=${managerId}`, {
         await axios
-        .get(`http://vanguardcontact.com/sapi/reports/ManagedActorList?campaignId=${this.campaignId}&managerId=${managerId}`, {
+        .get(`http://${process.env.VG_DATA_SERVER_DOMAIN}/sapi/reports/ManagedActorList?campaignId=${this.campaignId}&managerId=${managerId}`, {
             headers: {
                 'Authorization': `Bearer ${await token()}`
             }
@@ -146,9 +148,10 @@ module.exports = {
 //
 //***************************************************************************
 async function getCampaign(campaignId) {
-   
+    //.get(`https://vanguardcontact.com/sapi/campaigns/${campaignId}`, {   
+    
     await axios
-    .get(`https://vanguardcontact.com/sapi/campaigns/${campaignId}`, {
+    .get(`https://${process.env.VG_DATA_SERVER_DOMAIN}/sapi/campaigns/${campaignId}`, {
         headers: {
             'Authorization': `Bearer ${await token()}`
         }
