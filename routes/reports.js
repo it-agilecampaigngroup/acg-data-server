@@ -843,4 +843,46 @@ router.get('/ActorCallbackList', utils.authenticateToken, async(req, res) => {
     }
 });
 
+//====================================================================================
+// Precinct Heat Map report
+//
+// Returns information used to build a precinct heat map for a district
+// 
+//====================================================================================
+router.get('/PrecinctHeatMap', utils.authenticateToken, async(req, res) => {
+    try {
+        // Get the actor making the request
+        var actor
+        await utils.getActor(req)
+        .then( got_actor => {
+            actor = got_actor
+        })
+        .catch( (e) => {
+            ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /PrecinctHeatMap', 'Unknown error in GET /', e))
+            throw e
+        })
+        
+        // Make sure user has not been blocked
+        if( actor.isBlocked === true ) {
+            return res.status(401).send("Forbidden: Actor has been blocked")
+        }
+
+        // Prepare the arguments
+        var election = JSON.parse(req.query.election)
+        var districtList = JSON.parse(req.query.districtList)
+
+        // Generate and return the report
+        try {
+            const report = require('../reports/PrecinctHeatMap')
+            return res.status(200).send( await report(election, districtList) )
+        } catch (e) {
+            return res.status(400).send(`Error generating Precinct Heat Map report: ${e.message}`)
+        }
+
+    } catch(e) {
+        ErrorRecorder.recordAppError(new AppError('data-server', 'routes/reports.js', 'GET /PrecinctHeatMap', 'Unknown error in GET /PrecinctHeatMap', e))
+        throw e
+    }
+});
+
 module.exports = router

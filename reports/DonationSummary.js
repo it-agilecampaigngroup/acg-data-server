@@ -13,7 +13,7 @@ module.exports = async function generate(campaignId, lowDonationAmount, donation
     // For debugging
     //console.log(sql)
 
-    // Execute the query and return the client
+    // Execute the query and return the donation amounts
     try {
         const dbres = await db.query(sql)
         if( dbres.rowCount >= 1) {
